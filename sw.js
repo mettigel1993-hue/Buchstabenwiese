@@ -11,10 +11,13 @@ const PRECACHE = [
 // ponytail: font files (gstatic) are not precached, they get cached on the second online start
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(cache => Promise.all(PRECACHE.map(url =>
+  e.waitUntil(caches.open(CACHE).then(async cache => {
+    // recorded syllable clips, so every word works offline, not only the ones already played
+    const clips = await fetch('silben/silben.json').then(r => r.json())
+      .then(times => ['silben/silben.json', ...Object.keys(times).map(name => `silben/${name}.m4a`)]).catch(() => []);
     // no-cors: the Tailwind CDN sends no CORS header, so addAll() would reject its opaque response
-    fetch(new Request(url, { mode: 'no-cors' })).then(res => cache.put(url, res))
-  ))).then(() => self.skipWaiting()));
+    await Promise.all([...PRECACHE, ...clips].map(url => fetch(new Request(url, { mode: 'no-cors' })).then(res => cache.put(url, res))));
+  }).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));

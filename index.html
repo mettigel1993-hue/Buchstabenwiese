@@ -102,30 +102,131 @@
 <div id="app"></div>
 <script>
 /* ---------- Daten ---------- */
+// Stroke data on a 0–100 grid: ascender 17, x-height 42, baseline 80, descender down to 96.
+// arc(): points on an ellipse, angles in degrees (0 = right, 90 = down); decreasing angle = counter-clockwise.
+function arc(cx, cy, rx, ry, a0, a1){
+  const n = Math.ceil(Math.abs(a1 - a0) / 15);
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const a = (a0 + (a1 - a0) * i / n) * Math.PI / 180;
+    return [cx + rx * Math.cos(a), cy + ry * Math.sin(a)];
+  });
+}
+const dots = (x1, x2, y) => [[[x1,y],[x1,y+2]], [[x2,y],[x2,y+2]]];
+const O_UPPER = [[62,22],[50,17],[38,22],[28,35],[25,50],[28,65],[38,78],[50,80],[62,78],[72,65],[75,50],[72,35],[62,22]];
+const BOWL_CCW = arc(50,61,18,19,-30,-360); // belly of d, g, q (starts top right)
+const BOWL_CW = arc(48,61,19,19,-150,150);  // belly of b, p (starts at the stem)
+const ARCH = arc(48,60,18,17,180,360);      // arch of h, n
+
 const LETTERS = [
   { id:'a', sound:'a', word:'Ameise', emoji:'🐜',
     lower:[[[62,48],[54,43],[44,42],[36,46],[31,56],[33,67],[41,77],[52,80],[61,76],[65,66],[65,55],[63,48],[64,60],[65,80]]],
     upper:[[[28,80],[50,17],[72,80]],[[38,56],[62,56]]] },
-  { id:'m', sound:'m', word:'Maus', emoji:'🐭',
-    lower:[[[24,80],[24,45],[30,42],[38,45],[40,80],[40,50],[46,42],[54,42],[60,45],[62,80]]],
-    upper:[[[22,80],[22,17],[50,55],[78,17],[78,80]]] },
+  { id:'b', sound:'b', word:'Banane', emoji:'🍌',
+    lower:[[[30,17],[30,80]], BOWL_CW],
+    upper:[[[30,17],[30,80]], [[30,17],...arc(48,32,15,15,-90,90),[30,47]], [[30,47],...arc(50,63.5,18,16.5,-90,90),[30,80]]] },
+  { id:'c', sound:'c', word:'Clown', emoji:'🤡',
+    lower:[arc(50,61,18,19,-45,-315)],
+    upper:[arc(52,48.5,24,31.5,-40,-320)] },
+  { id:'d', sound:'d', word:'Dino', emoji:'🦕',
+    lower:[BOWL_CCW, [[68,17],[68,80]]],
+    upper:[[[30,17],[30,80]], [[30,17],...arc(45,48.5,27,31.5,-90,90),[30,80]]] },
+  { id:'e', sound:'e', word:'Ente', emoji:'🦆',
+    lower:[[[32,61],...arc(50,61,18,19,0,-320)]],
+    upper:[[[30,17],[30,80]], [[30,17],[70,17]], [[30,48],[64,48]], [[30,80],[70,80]]] },
+  { id:'f', sound:'f', word:'Fisch', emoji:'🐟',
+    lower:[[...arc(56,30,12,12,-20,-180),[44,80]], [[32,45],[60,45]]],
+    upper:[[[30,17],[30,80]], [[30,17],[70,17]], [[30,48],[62,48]]] },
+  { id:'g', sound:'g', word:'Giraffe', emoji:'🦒',
+    lower:[BOWL_CCW, [[68,42],[68,86],...arc(53,86,15,9,0,160)]],
+    upper:[[...arc(52,48.5,24,31.5,-40,-360),[56,49]]] },
+  { id:'h', sound:'h', word:'Hund', emoji:'🐶',
+    lower:[[[30,17],[30,80]], [...ARCH,[66,80]]],
+    upper:[[[28,17],[28,80]], [[72,17],[72,80]], [[28,48],[72,48]]] },
   { id:'i', sound:'i', word:'Igel', emoji:'🦔',
-    lower:[[[50,45],[50,80]],[[50,18],[50,20]]],
+    lower:[[[50,45],[50,80]],[[50,30],[50,32]]],
     upper:[[[50,17],[50,80]]] },
-  { id:'t', sound:'t', word:'Tiger', emoji:'🐯',
-    lower:[[[50,20],[50,72],[54,78],[59,76]],[[32,46],[68,46]]],
-    upper:[[[22,20],[78,20]],[[50,20],[50,80]]] },
-  { id:'o', sound:'o', word:'Oma', emoji:'👵',
-    lower:[[[60,46],[52,42],[43,42],[35,47],[31,56],[32,67],[39,77],[49,80],[58,77],[63,68],[64,57],[60,46]]],
-    upper:[[[62,22],[50,17],[38,22],[28,35],[25,50],[28,65],[38,78],[50,80],[62,78],[72,65],[75,50],[72,35],[62,22]]] },
+  { id:'j', sound:'j', word:'Jojo', emoji:'🪀',
+    lower:[[[58,45],[58,86],...arc(45,86,13,9,0,170)], [[58,30],[58,32]]],
+    upper:[[[62,17],[62,62],...arc(46,62,16,18,0,180)]] },
+  { id:'k', sound:'k', word:'Katze', emoji:'🐱',
+    lower:[[[30,17],[30,80]], [[64,44],[32,64],[66,80]]],
+    upper:[[[30,17],[30,80]], [[70,17],[32,50],[72,80]]] },
   { id:'l', sound:'l', word:'Löwe', emoji:'🦁',
     lower:[[[50,17],[50,70],[54,78],[60,76]]],
     upper:[[[28,17],[28,80],[68,80]]] },
+  { id:'m', sound:'m', word:'Maus', emoji:'🐭',
+    lower:[[[24,80],[24,45],[30,42],[38,45],[40,80],[40,50],[46,42],[54,42],[60,45],[62,80]]],
+    upper:[[[22,80],[22,17],[50,55],[78,17],[78,80]]] },
+  { id:'n', sound:'n', word:'Nase', emoji:'👃',
+    lower:[[[30,42],[30,80]], [...ARCH,[66,80]]],
+    upper:[[[28,80],[28,17],[72,80],[72,17]]] },
+  { id:'o', sound:'o', word:'Oma', emoji:'👵',
+    lower:[[[60,46],[52,42],[43,42],[35,47],[31,56],[32,67],[39,77],[49,80],[58,77],[63,68],[64,57],[60,46]]],
+    upper:[O_UPPER] },
+  { id:'p', sound:'p', word:'Pinguin', emoji:'🐧',
+    lower:[[[30,42],[30,96]], BOWL_CW],
+    upper:[[[30,17],[30,80]], [[30,17],...arc(50,33,20,16,-90,90),[30,49]]] },
+  { id:'q', sound:'q', word:'Qualle', emoji:'🪼',
+    lower:[BOWL_CCW, [[68,42],[68,96]]],
+    upper:[O_UPPER, [[55,62],[76,84]]] },
+  { id:'r', sound:'r', word:'Rakete', emoji:'🚀',
+    lower:[[[32,42],[32,80]], arc(50,58,18,14,180,300)],
+    upper:[[[30,17],[30,80]], [[30,17],...arc(50,33,20,16,-90,90),[40,49],[72,80]]] },
+  { id:'s', sound:'s', word:'Sonne', emoji:'☀️',
+    lower:[[...arc(50,51,15,9.5,-30,-270), ...arc(50,70.5,16,9.5,-90,150)]],
+    upper:[[...arc(50,32.5,21,15.5,-30,-270), ...arc(50,64,22,16,-90,150)]] },
+  { id:'t', sound:'t', word:'Tiger', emoji:'🐯',
+    lower:[[[50,20],[50,72],[54,78],[59,76]],[[32,46],[68,46]]],
+    upper:[[[22,20],[78,20]],[[50,20],[50,80]]] },
+  { id:'u', sound:'u', word:'Ufo', emoji:'🛸',
+    lower:[[[30,42],[30,62],...arc(48,62,18,18,180,0),[66,42]], [[66,42],[66,80]]],
+    upper:[[[28,17],[28,58],...arc(50,58,22,22,180,0),[72,17]]] },
+  { id:'v', sound:'v', word:'Vogel', emoji:'🐦',
+    lower:[[[30,42],[50,80],[70,42]]],
+    upper:[[[26,17],[50,80],[74,17]]] },
+  { id:'w', sound:'w', word:'Wal', emoji:'🐳',
+    lower:[[[20,42],[35,80],[50,50],[65,80],[80,42]]],
+    upper:[[[18,17],[34,80],[50,30],[66,80],[82,17]]] },
+  { id:'x', sound:'x', word:'Xylofon', emoji:'🎶',
+    lower:[[[32,42],[68,80]], [[68,42],[32,80]]],
+    upper:[[[28,17],[72,80]], [[72,17],[28,80]]] },
+  { id:'y', sound:'y', word:'Yoga', emoji:'🧘',
+    lower:[[[30,42],[50,78]], [[70,42],[40,96]]],
+    upper:[[[28,17],[50,48]], [[72,17],[50,48],[50,80]]] },
+  { id:'z', sound:'z', word:'Zebra', emoji:'🦓',
+    lower:[[[32,42],[68,42],[32,80],[68,80]]],
+    upper:[[[28,17],[72,17],[28,80],[72,80]]] },
 ];
+LETTERS.push(
+  { id:'ä', sound:'ä', word:'Äpfel', emoji:'🍎',
+    lower:[...letterById('a').lower, ...dots(40,58,30)], upper:[...letterById('a').upper, ...dots(38,62,6)] },
+  { id:'ö', sound:'ö', word:'Öl', emoji:'🛢️',
+    lower:[...letterById('o').lower, ...dots(40,56,30)], upper:[...letterById('o').upper, ...dots(40,60,6)] },
+  { id:'ü', sound:'ü', word:'Überraschung', emoji:'🎁',
+    lower:[...letterById('u').lower, ...dots(38,58,30)], upper:[...letterById('u').upper, ...dots(38,62,6)] },
+  { id:'ß', sound:'ß', word:'Fuß', emoji:'🦶', // no capital in primary school
+    lower:[[[32,80],[32,32],...arc(47,32,15,14,180,360),[48,50],...arc(50,65,16,15,-90,110)]], upper:null },
+);
+const GROUPS = [
+  { id:'sch', word:'Schaf', emoji:'🐑' }, { id:'ch', word:'Drache', emoji:'🐉' }, { id:'ei', word:'Eis', emoji:'🍦' },
+  { id:'au', word:'Auto', emoji:'🚗' }, { id:'eu', word:'Eule', emoji:'🦉' }, { id:'ie', word:'Biene', emoji:'🐝' },
+  { id:'sp', word:'Spinne', emoji:'🕷️' }, { id:'st', word:'Stern', emoji:'⭐' }, { id:'pf', word:'Pferd', emoji:'🐴' },
+  { id:'qu', word:'Quatsch', emoji:'🤪' },
+];
+GROUPS.forEach(g => g.sound = `${g.id}, wie ${g.word}`);
+const cap = s => s[0].toUpperCase() + s.slice(1);
+const pairLabel = id => id === 'ß' ? 'ß' : id.length > 1 ? `${cap(id)} ${id}` : cap(id) + id;
 const WORDS = [
   { text:'Oma', emoji:'👵' }, { text:'Mia', emoji:'👧' }, { text:'Tom', emoji:'👦' },
   { text:'Tal', emoji:'🏞️' }, { text:'Lamm', emoji:'🐑' }, { text:'Aal', emoji:'🐟' },
   { text:'Otto', emoji:'👴' }, { text:'malt', emoji:'🎨' }, { text:'toll', emoji:'⭐' },
+  { text:'Hund', emoji:'🐶' }, { text:'Haus', emoji:'🏠' }, { text:'Ball', emoji:'⚽' },
+  { text:'Eis', emoji:'🍦' }, { text:'Auto', emoji:'🚗' }, { text:'Baum', emoji:'🌳' },
+  { text:'Sonne', emoji:'☀️' }, { text:'Fisch', emoji:'🐟' }, { text:'Buch', emoji:'📖' },
+  { text:'Nase', emoji:'👃' }, { text:'Zug', emoji:'🚂' }, { text:'Bär', emoji:'🐻' },
+  { text:'Käse', emoji:'🧀' }, { text:'Pilz', emoji:'🍄' }, { text:'Wal', emoji:'🐳' },
+  { text:'Mond', emoji:'🌙' }, { text:'Fuß', emoji:'🦶' }, { text:'Löwe', emoji:'🦁' },
+  { text:'Vogel', emoji:'🐦' }, { text:'Kuh', emoji:'🐮' }, { text:'Rose', emoji:'🌹' },
 ];
 const STORIES = [
   {
@@ -166,17 +267,75 @@ const STORIES = [
       'Als der Mond aufging, streute Pepino den Sternenstaub wieder über das Dorf. Und weil er so viele Freunde gefunden hatte, funkelte der Staub heller als je zuvor.',
     ],
   },
+  // Klasse 2: stories with questions are for reading alone
+  {
+    id: 'funki',
+    title: 'Funki, der kleine Drache',
+    emoji: '🐉',
+    pages: [
+      'Funki ist ein kleiner grüner Drache. Er wohnt in einer Höhle auf dem Berg.',
+      'Alle Drachen können Feuer spucken. Nur Funki nicht. Wenn er pustet, kommen nur kleine Wolken aus seiner Nase.',
+      'Die anderen Drachen lachen ihn aus. Funki ist traurig und geht allein in den Wald.',
+      'Im Wald trifft er einen Igel. Der Igel zittert. „Mir ist so kalt“, sagt er leise.',
+      'Funki holt tief Luft und pustet. Da kommt ein warmer Wind aus seinem Mund.',
+      'Der Igel lächelt. „Das ist schön warm!“, ruft er. Bald kommen auch ein Hase und ein Eichhörnchen dazu.',
+      'Jeden Abend wärmt Funki nun die Tiere im Wald. Er ist nicht mehr traurig. Er weiß jetzt: Jeder kann etwas Besonderes.',
+    ],
+    questions: [
+      { q:'Wo wohnt Funki?', a:'In einer Höhle auf dem Berg', o:['In einem Haus am See', 'In einem Baum im Wald'] },
+      { q:'Wer zittert im Wald?', a:'Der Igel', o:['Der Hase', 'Die Eule'] },
+    ],
+  },
+  {
+    id: 'susi',
+    title: 'Susi Schnecke macht Urlaub',
+    emoji: '🐌',
+    pages: [
+      'Susi ist eine kleine Schnecke. Sie wohnt im Garten unter einem großen Salatblatt.',
+      'Eines Tages sagt Susi: „Ich möchte Urlaub machen! Ich will das Meer sehen.“',
+      'Sie packt ihr Haus auf den Rücken und kriecht los. Das geht aber sehr langsam.',
+      'Nach einem ganzen Tag ist Susi erst am Gartenzaun. Sie ist müde und schläft ein.',
+      'Am Morgen sieht Susi eine Pfütze. Die Sonne glitzert im Wasser. Kleine Blätter schwimmen wie Boote darauf.',
+      '„Oh, das Meer!“, ruft Susi fröhlich. Sie setzt sich an den Rand und schaut auf das Wasser.',
+      'Am Abend kriecht Susi zurück nach Hause. Sie erzählt allen Käfern von ihrem schönen Urlaub am Meer.',
+    ],
+    questions: [
+      { q:'Was möchte Susi sehen?', a:'Das Meer', o:['Den Wald', 'Die Berge'] },
+      { q:'Was hält Susi für das Meer?', a:'Eine Pfütze', o:['Einen Teich', 'Eine Gießkanne'] },
+    ],
+  },
+  {
+    id: 'brummi',
+    title: 'Mia und der Teddy Brummi',
+    emoji: '🧸',
+    pages: [
+      'Mia hat einen Teddy. Er heißt Brummi und hat ein rotes Halstuch.',
+      'Am Samstag geht Mia mit Papa in den Park. Brummi kommt natürlich mit.',
+      'Mia spielt auf der Rutsche und auf der Schaukel. Brummi sitzt auf der Bank und schaut zu.',
+      'Dann ist es Zeit für das Mittagessen. Mia und Papa gehen nach Hause.',
+      'Am Abend will Mia schlafen gehen. Aber wo ist Brummi? Er ist nicht im Bett!',
+      '„Brummi sitzt noch auf der Bank im Park!“, ruft Mia. Papa nimmt eine Taschenlampe, und sie laufen schnell los.',
+      'Im Park ist es schon dunkel. Da leuchtet etwas Rotes auf der Bank. Es ist Brummis Halstuch!',
+      'Mia drückt Brummi ganz fest. „Ich lasse dich nie wieder allein“, flüstert sie. Dann gehen alle zusammen nach Hause.',
+    ],
+    questions: [
+      { q:'Wie heißt der Teddy?', a:'Brummi', o:['Bruno', 'Bello'] },
+      { q:'Wo hat Mia den Teddy vergessen?', a:'Auf der Bank im Park', o:['Auf der Rutsche', 'Im Bett'] },
+    ],
+  },
 ];
 const STORAGE_KEY = 'buchstabenwiese-progress-v1';
 
 /* ---------- Fortschritt ---------- */
 function defaultProgress(){
-  const p = {};
+  const p = { stars:{} };
   LETTERS.forEach(l => p[l.id] = { lower:false, upper:false, recognizedCount:0 });
+  GROUPS.forEach(g => p[g.id] = { recognizedCount:0 });
   return p;
 }
 let progress;
-try { progress = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultProgress(); }
+// merge so progress saved by an older version gets the new letters and stars
+try { progress = Object.assign(defaultProgress(), JSON.parse(localStorage.getItem(STORAGE_KEY))); }
 catch(e){ progress = defaultProgress(); }
 function saveProgress(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); }catch(e){} }
 
@@ -244,14 +403,15 @@ function render(){
   else if (view === 'map') renderMap();
   else if (view === 'detail') renderDetail(ctx.id);
   else if (view === 'trace') renderTrace(ctx.id, ctx.case);
-  else if (view === 'recognize') renderRecognize();
+  else if (view === 'hub') renderHub(ctx.menu);
+  else if (view === 'quiz') renderQuiz(ctx.item);
   else if (view === 'words') renderWords();
   else if (view === 'wordplay') renderWordPlay(ctx.word);
-  else if (view === 'stories') renderStories();
+  else if (view === 'stories') renderStories(!!ctx.self);
   else if (view === 'storyread') renderStoryRead(ctx.id);
 }
 
-function letterById(id){ return LETTERS.find(l => l.id === id); }
+function letterById(id){ return LETTERS.find(l => l.id === id) || GROUPS.find(g => g.id === id); }
 
 function header(title, onBack){
   const bar = document.createElement('div');
@@ -267,9 +427,9 @@ function header(title, onBack){
 /* ---------- Willkommen (Fach wählen) ---------- */
 const SUBJECTS = {
   deutsch: { title:'Buchstabenwiese', emoji:'🔤', color:'var(--moss)',
-    grades:{ 1: () => go('map'), 2: null } },
+    grades:{ 1: () => go('map'), 2: () => go('hub', { menu:'deutsch2' }) } },
   mathe: { title:'Zahlenwiese', emoji:'🔢', color:'var(--honey)',
-    grades:{ 1: null, 2: null } },
+    grades:{ 1: () => go('hub', { menu:'mathe1' }), 2: () => go('hub', { menu:'mathe2' }) } },
 };
 
 function renderWelcome(){
@@ -302,17 +462,13 @@ function renderGrade(subject){
   const grid = document.createElement('div');
   grid.className = 'grid grid-cols-2 gap-4 px-5 py-8 max-w-md mx-auto w-full';
   [1, 2].forEach(g => {
-    const open = s.grades[g];
     const tile = document.createElement('button');
     tile.className = 'tile aspect-square flex flex-col items-center justify-center gap-2';
-    tile.disabled = !open;
-    if (!open) tile.style.opacity = '.5';
     tile.innerHTML = `
       <div class="font-display text-5xl font-800" style="color:var(--moss-dark)">${g}</div>
       <div class="font-display text-xl">Klasse ${g}</div>
-      ${open ? '' : '<div class="text-sm">🚧 kommt bald</div>'}
     `;
-    if (open) tile.onclick = open;
+    tile.onclick = s.grades[g];
     grid.appendChild(tile);
   });
   wrap.appendChild(grid);
@@ -325,19 +481,23 @@ function renderMap(){
   wrap.className = 'hills flex-1 flex flex-col relative z-10';
   wrap.appendChild(header('Buchstabenwiese', () => go('grade', { subject:'deutsch' })));
 
-  const grid = document.createElement('div');
-  grid.className = 'flex-1 grid grid-cols-3 gap-4 px-5 py-4 content-start max-w-md mx-auto w-full';
+  const tileGrid = () => {
+    const grid = document.createElement('div');
+    grid.className = 'grid grid-cols-3 sm:grid-cols-5 gap-4 px-5 py-4 content-start max-w-md sm:max-w-2xl mx-auto w-full';
+    return grid;
+  };
+  const grid = tileGrid();
   LETTERS.forEach(l => {
     const pr = progress[l.id];
-    const mastered = pr.lower && pr.upper && pr.recognizedCount >= 2;
+    const mastered = pr.lower && (pr.upper || !l.upper) && pr.recognizedCount >= 2;
     const tile = document.createElement('button');
     tile.className = `tile ${mastered ? 'mastered' : ''} aspect-square flex flex-col items-center justify-center gap-1 relative`;
     tile.innerHTML = `
       ${mastered ? '<div class="absolute -top-2 -right-2 text-2xl">⭐</div>' : ''}
-      <div class="letterform text-3xl leading-none" style="color:var(--moss-dark)">${l.id.toUpperCase()}${l.id}</div>
+      <div class="letterform text-3xl leading-none" style="color:var(--moss-dark)">${pairLabel(l.id)}</div>
       <div class="flex gap-1 mt-1">
         <span class="dot ${pr.lower ? 'on':''}"></span>
-        <span class="dot ${pr.upper ? 'on':''}"></span>
+        ${l.upper ? `<span class="dot ${pr.upper ? 'on':''}"></span>` : ''}
         <span class="dot ${pr.recognizedCount>=2 ? 'on':''}"></span>
       </div>
     `;
@@ -345,6 +505,23 @@ function renderMap(){
     grid.appendChild(tile);
   });
   wrap.appendChild(grid);
+
+  const groupTitle = document.createElement('h2');
+  groupTitle.className = 'font-display text-xl text-center mt-2';
+  groupTitle.textContent = 'Buchstabengruppen';
+  wrap.appendChild(groupTitle);
+  const groupGrid = tileGrid();
+  GROUPS.forEach(g => {
+    const tile = document.createElement('button');
+    tile.className = 'tile aspect-square flex flex-col items-center justify-center gap-1';
+    tile.innerHTML = `
+      <div class="letterform text-2xl leading-none" style="color:var(--moss-dark)">${pairLabel(g.id)}</div>
+      <div class="flex gap-1 mt-1"><span class="dot ${progress[g.id].recognizedCount>=2 ? 'on':''}"></span></div>
+    `;
+    tile.onclick = () => go('detail', { id: g.id });
+    groupGrid.appendChild(tile);
+  });
+  wrap.appendChild(groupGrid);
 
   const games = document.createElement('div');
   games.className = 'px-5 pb-6 max-w-md mx-auto w-full flex gap-3';
@@ -361,9 +538,10 @@ function renderMap(){
 
   app.appendChild(wrap);
 
-  document.getElementById('recBtn').onclick = () => go('recognize');
+  document.getElementById('recBtn').onclick = () =>
+    go('quiz', { item: { key:'d1-erkennen', title:'Erkennen', make: recognizeTask, back: () => go('map') } });
   document.getElementById('wordBtn').onclick = () => go('words');
-  document.getElementById('storyBtn').onclick = () => go('stories');
+  document.getElementById('storyBtn').onclick = () => go('stories', { self:false });
 }
 
 /* ---------- Buchstaben-Detail ---------- */
@@ -372,40 +550,52 @@ function renderDetail(id){
   const pr = progress[id];
   const wrap = document.createElement('div');
   wrap.className = 'flex-1 flex flex-col relative z-10';
-  wrap.appendChild(header(`${l.id.toUpperCase()}${l.id}`, () => go('map')));
+  wrap.appendChild(header(pairLabel(id), () => go('map')));
 
   const body = document.createElement('div');
   body.className = 'flex-1 flex flex-col items-center px-6 max-w-md mx-auto w-full';
   body.innerHTML = `
     <button id="playSound" class="tile w-full flex flex-col items-center py-6 mb-6">
-      <div class="letterform text-7xl" style="color:var(--moss-dark)">${l.id.toUpperCase()}${l.id}</div>
+      <div class="letterform text-7xl" style="color:var(--moss-dark)">${pairLabel(id)}</div>
       <div class="text-5xl my-2">${l.emoji}</div>
       <div class="font-display text-xl">${l.word}</div>
       <div class="text-2xl mt-2">🔊</div>
     </button>
     <div class="grid grid-cols-2 gap-3 w-full">
-      <button id="traceLower" class="btn py-4 text-white text-lg" style="background:var(--moss)">
+      ${l.lower ? `<button id="traceLower" class="btn py-4 text-white text-lg" style="background:var(--moss)">
         ${l.id} üben ${pr.lower ? '✓' : ''}
-      </button>
-      <button id="traceUpper" class="btn py-4 text-white text-lg" style="background:var(--moss)">
+      </button>` : ''}
+      ${l.upper ? `<button id="traceUpper" class="btn py-4 text-white text-lg" style="background:var(--moss)">
         ${l.id.toUpperCase()} üben ${pr.upper ? '✓' : ''}
-      </button>
+      </button>` : ''}
     </div>
   `;
   wrap.appendChild(body);
   app.appendChild(wrap);
 
-  const playIntro = () => speak(`${l.sound}. ${l.word}`);
+  // groups (sch, ei, …) are only heard and recognized, their sound already contains the word
+  const playIntro = () => speak(l.lower ? `${l.sound}. ${l.word}` : l.sound);
   document.getElementById('playSound').onclick = playIntro;
-  document.getElementById('traceLower').onclick = () => go('trace', { id, case:'lower' });
-  document.getElementById('traceUpper').onclick = () => go('trace', { id, case:'upper' });
+  if (l.lower) document.getElementById('traceLower').onclick = () => go('trace', { id, case:'lower' });
+  if (l.upper) document.getElementById('traceUpper').onclick = () => go('trace', { id, case:'upper' });
   playIntro();
 }
 
 /* ---------- Nachfahren (strict stroke order) ---------- */
+// evenly spaced points, so matching behaves the same for long straight lines and dense curves
+function densify(stroke, step){
+  const out = [stroke[0]];
+  for (let i = 1; i < stroke.length; i++){
+    const [x0, y0] = stroke[i-1], [x1, y1] = stroke[i];
+    const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / step));
+    for (let k = 1; k <= n; k++) out.push([x0 + (x1 - x0) * k / n, y0 + (y1 - y0) * k / n]);
+  }
+  return out;
+}
+
 function renderTrace(id, caseType){
   const l = letterById(id);
-  const strokesNorm = l[caseType];
+  const strokesNorm = l[caseType].map(s => densify(s, 5));
   const wrap = document.createElement('div');
   wrap.className = 'flex-1 flex flex-col relative z-10';
   wrap.appendChild(header(`${caseType === 'upper' ? id.toUpperCase() : id} schreiben`, () => go('detail', { id })));
@@ -426,7 +616,7 @@ function renderTrace(id, caseType){
   const cctx = canvas.getContext('2d');
   const SIZE = 320;
   const TOL = 22; // normalized tolerance (0-100 space) — generous corridor for small hands
-  const WINDOW = 12; // how far ahead we search for a match, so fast/jumpy strokes still register
+  const WINDOW = 7; // points ahead (5 units apart) we search for a match, so fast/jumpy strokes still register
   const OFFPATH_MULT = 2.6; // how far off the corridor counts as "drifting"
   const GRACE_FRAMES = 18; // consecutive drifting frames tolerated before a reset — avoids punishing brief wobbles
 
@@ -523,10 +713,12 @@ function renderTrace(id, caseType){
     evt.preventDefault();
     const pos = getPos(evt);
     const stroke = strokesNorm[strokeIdx];
-    let matched = -1;
+    // nearest point, not the furthest: on small letters the whole curve is within TOL of the finger,
+    // and "furthest" would let progress race around the letter while the finger stays put
+    let matched = -1, best = Infinity;
     for (let i = progressIdx; i < Math.min(stroke.length, progressIdx + WINDOW); i++){
-      const p = toPx(stroke[i]);
-      if (dist(pos, p) <= TOL/100*SIZE) matched = i;
+      const d = dist(pos, toPx(stroke[i]));
+      if (d <= TOL/100*SIZE && d < best){ matched = i; best = d; }
     }
     if (matched >= progressIdx){
       progressIdx = matched;
@@ -553,7 +745,7 @@ function renderTrace(id, caseType){
   function onUp(evt){
     if (!drawing) return;
     const stroke = strokesNorm[strokeIdx];
-    if (progressIdx >= stroke.length - 1){
+    if (progressIdx >= stroke.length - 3){ // up to 2 points (10 units) short of the end still counts
       completedStrokes.push(stroke);
       strokeIdx++;
       drawing = false;
@@ -605,66 +797,29 @@ function celebrate(after){
 }
 
 /* ---------- Erkennen (Multiple Choice) ---------- */
-function renderRecognize(){
-  const wrap = document.createElement('div');
-  wrap.className = 'flex-1 flex flex-col relative z-10';
-  wrap.appendChild(header('Erkennen', () => go('map')));
-
-  let round = 0;
-  const TOTAL_ROUNDS = 5;
-  let target, options;
-
-  const body = document.createElement('div');
-  body.className = 'flex-1 flex flex-col items-center px-6 max-w-md mx-auto w-full';
-  wrap.appendChild(body);
-  app.appendChild(wrap);
-
-  function pickRound(){
-    const l = LETTERS[Math.floor(Math.random()*LETTERS.length)];
-    const isUpper = Math.random() < 0.5;
-    target = { id: l.id, sound: l.sound, display: isUpper ? l.id.toUpperCase() : l.id };
-    const distractors = LETTERS.filter(x => x.id !== l.id)
-      .sort(() => Math.random()-0.5)
-      .slice(0,3)
-      .map(x => (Math.random()<0.5 ? x.id.toUpperCase() : x.id));
-    options = [target.display, ...distractors].sort(() => Math.random()-0.5);
-    renderRound();
-  }
-
-  function renderRound(){
-    body.innerHTML = `
-      <div class="font-display text-lg mb-4">Runde ${round+1} / ${TOTAL_ROUNDS}</div>
-      <button id="hearBtn" class="tile w-32 h-32 flex items-center justify-center text-5xl mb-8">🔊</button>
-      <div class="grid grid-cols-2 gap-4 w-full" id="optGrid"></div>
-    `;
-    const grid = document.getElementById('optGrid');
-    options.forEach(opt => {
-      const b = document.createElement('button');
-      b.className = 'tile letterform text-4xl py-6';
-      b.style.color = 'var(--moss-dark)';
-      b.textContent = opt;
-      b.onclick = () => {
-        if (opt.toLowerCase() === target.id){
-          progress[target.id].recognizedCount++;
-          saveProgress();
-          round++;
-          if (round >= TOTAL_ROUNDS){
-            celebrate(() => go('map'));
-          } else {
-            celebrate(() => pickRound());
-          }
-        } else {
-          b.classList.add('shake');
-          setTimeout(()=>b.classList.remove('shake'), 500);
-        }
-      };
-      grid.appendChild(b);
-    });
-    document.getElementById('hearBtn').onclick = () => speak(target.sound);
-    speak(target.sound);
-  }
-
-  pickRound();
+// letters that look or sound alike make the best wrong answers
+const SIMILAR = {
+  a:'ä o e', b:'d p q h', c:'k s z', d:'b p q', e:'ä i a', f:'v t', g:'k q', h:'n k', i:'e l j', j:'i y',
+  k:'g c', l:'i t', m:'n w', n:'m u h', o:'ö a u', p:'b d q', q:'p d g', r:'n l', s:'z ß c', t:'f l',
+  u:'n ü v', v:'w u f', w:'v m', x:'k z', y:'j v', z:'s c', ä:'a e ö', ö:'o ü ä', ü:'u ö i', ß:'s b',
+  sch:'s ch st sp', ch:'sch h', ei:'ie eu au', ie:'ei i', eu:'ei au', au:'eu ei', sp:'st sch', st:'sp sch', pf:'f p', qu:'q k',
+};
+function recognizeTask(){
+  const all = [...LETTERS, ...GROUPS];
+  const target = pick(all);
+  const upper = target.id !== 'ß' && Math.random() < 0.5; // all options in the same case, ß has no capital
+  const allowed = id => id !== target.id && !(upper && id === 'ß');
+  const similar = shuffle(SIMILAR[target.id].split(' ').filter(allowed)).slice(0, 2);
+  const rest = shuffle(all.map(x => x.id).filter(id => allowed(id) && !similar.includes(id)));
+  return {
+    show: '<div class="font-display text-xl">Was hörst du?</div>',
+    say: target.sound,
+    options: [target.id, ...similar, ...rest].slice(0, 4),
+    answer: target.id,
+    fmt: id => upper ? cap(id) : id,
+    optClass: 'letterform text-4xl',
+    onCorrect: () => { progress[target.id].recognizedCount++; saveProgress(); },
+  };
 }
 
 /* ---------- Wörter ---------- */
@@ -744,21 +899,22 @@ function renderWordPlay(word){
 }
 
 /* ---------- Geschichten ---------- */
-function renderStories(){
+// self = Klasse 2: read alone, questions at the end
+function renderStories(self){
   const wrap = document.createElement('div');
   wrap.className = 'flex-1 flex flex-col relative z-10';
-  wrap.appendChild(header('Geschichten', () => go('map')));
+  wrap.appendChild(header(self ? 'Selbst lesen' : 'Geschichten', () => self ? go('hub', { menu:'deutsch2' }) : go('map')));
 
   const list = document.createElement('div');
   list.className = 'flex-1 flex flex-col gap-4 px-5 py-4 max-w-md mx-auto w-full';
-  STORIES.forEach(s => {
+  STORIES.filter(s => !!s.questions === self).forEach(s => {
     const card = document.createElement('button');
-    card.className = 'tile flex items-center gap-4 p-5 text-left';
+    card.className = `tile ${progress.stars['story-' + s.id] ? 'mastered' : ''} flex items-center gap-4 p-5 text-left`;
     card.innerHTML = `
       <div class="text-5xl">${s.emoji}</div>
       <div>
-        <div class="font-display text-xl" style="color:var(--moss-dark)">${s.title}</div>
-        <div class="text-sm" style="color:var(--bark)">${s.pages.length} Seiten &middot; langsam vorgelesen</div>
+        <div class="font-display text-xl" style="color:var(--moss-dark)">${s.title}${progress.stars['story-' + s.id] ? ' ⭐' : ''}</div>
+        <div class="text-sm" style="color:var(--bark)">${s.pages.length} Seiten &middot; ${self ? 'selbst lesen' : 'langsam vorgelesen'}</div>
       </div>
     `;
     card.onclick = () => go('storyread', { id: s.id });
@@ -770,9 +926,10 @@ function renderStories(){
 
 function renderStoryRead(storyId){
   const story = STORIES.find(s => s.id === storyId);
+  const self = !!story.questions;
   const wrap = document.createElement('div');
   wrap.className = 'flex-1 flex flex-col relative z-10';
-  wrap.appendChild(header(story.title, () => { speechSynthesis.cancel(); go('stories'); }));
+  wrap.appendChild(header(story.title, () => { speechSynthesis.cancel(); go('stories', { self }); }));
 
   const body = document.createElement('div');
   body.className = 'flex-1 flex flex-col px-6 max-w-md mx-auto w-full';
@@ -799,10 +956,12 @@ function renderStoryRead(storyId){
       <div class="tile p-5 mb-4 text-xl leading-relaxed font-display" id="pageText" style="min-height:200px"></div>
       <div class="flex items-center justify-center gap-3 mb-3">
         <button id="prevBtn" class="btn w-12 h-12 text-white text-xl" style="background:var(--bark)">←</button>
-        <button id="playBtn" class="btn px-5 py-3 text-white text-base flex-1" style="background:var(--lavender)">🔊 Langsam vorlesen</button>
-        <button id="nextBtn" class="btn w-12 h-12 text-white text-xl" style="background:var(--bark)">${page === story.pages.length-1 ? '🏁' : '→'}</button>
+        ${self
+          ? '<div class="flex-1 text-center font-display text-base">Tippe auf einen Satz 🔊</div>'
+          : '<button id="playBtn" class="btn px-5 py-3 text-white text-base flex-1" style="background:var(--lavender)">🔊 Langsam vorlesen</button>'}
+        <button id="nextBtn" class="btn w-12 h-12 text-white text-xl" style="background:var(--bark)">${page === story.pages.length-1 ? (self ? '❓' : '🏁') : '→'}</button>
       </div>
-      <p class="text-center text-sm mb-3" style="color:var(--bark)">Tipp: Tippe ein Wort im Text an</p>
+      ${self ? '' : '<p class="text-center text-sm mb-3" style="color:var(--bark)">Tipp: Tippe ein Wort im Text an</p>'}
       <div id="wordPanel" class="tile p-4 mb-4 hidden"></div>
     `;
     const textEl = document.getElementById('pageText');
@@ -810,6 +969,7 @@ function renderStoryRead(storyId){
     textEl.querySelectorAll('.story-word').forEach(wEl => {
       wEl.onclick = (e) => {
         e.stopPropagation();
+        if (self) return readAloud([+wEl.parentElement.dataset.i], 0.8);
         const clean = wEl.textContent.replace(/[„"“”‚'’.,!?;:()–—]/g,'').trim();
         if (clean) onWordTap(clean, textEl);
       };
@@ -822,22 +982,33 @@ function renderStoryRead(storyId){
 
     document.getElementById('nextBtn').onclick = () => {
       if (page < story.pages.length - 1){ page++; renderPage(); }
+      else if (self) go('quiz', { item: {
+        key: 'story-' + story.id, title: story.title, back: () => go('stories', { self }),
+        tasks: story.questions.map(q => ({
+          show: `<div class="font-display text-2xl text-center my-6">${q.q}</div>`,
+          options: [q.a, ...q.o], answer: q.a, cols: 1, optClass: 'font-display text-xl',
+        })),
+      } });
       else { speechSynthesis.cancel(); go('stories'); }
     };
 
-    function playPage(){
+    // reads the sentences with the given indexes, highlighting the one being read
+    function readAloud(idxs, rate){
       const spans = textEl.querySelectorAll('.story-sentence');
-      speakChain(sentences, {
-        rate: 0.65,
-        onIndex: (i) => {
+      speakChain(idxs.map(i => sentences[i]), {
+        rate,
+        onIndex: (k) => {
           spans.forEach(s => s.classList.remove('story-highlight'));
-          if (spans[i]) spans[i].classList.add('story-highlight');
+          if (spans[idxs[k]]) spans[idxs[k]].classList.add('story-highlight');
         },
         onDone: () => spans.forEach(s => s.classList.remove('story-highlight')),
       });
     }
-    document.getElementById('playBtn').onclick = playPage;
-    playPage();
+    if (!self){
+      const playPage = () => readAloud(sentences.map((_, i) => i), 0.65);
+      document.getElementById('playBtn').onclick = playPage;
+      playPage();
+    }
   }
 
   function onWordTap(word, textEl){
@@ -876,6 +1047,452 @@ function renderStoryRead(storyId){
 
   renderPage();
 }
+
+/* ---------- Hilfen für Übungen ---------- */
+const rand = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function shuffle(arr){
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function shake(el){ el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 500); }
+// deals list entries in random order, no repeats until the list is used up
+function deck(list, toTask){
+  let pile = [];
+  return () => { if (!pile.length) pile = shuffle(list); return toTask(pile.pop()); };
+}
+// answer + 3 wrong answers: typical mistakes first, then neighbours in `step`s
+function choices(answer, candidates, lo, hi, step = 1){
+  const opts = [answer];
+  const add = c => { if (opts.length < 4 && c >= lo && c <= hi && !opts.includes(c)) opts.push(c); };
+  shuffle(candidates).forEach(add);
+  for (let d = 1; opts.length < 4; d++){ add(answer + d * step); add(answer - d * step); }
+  return opts;
+}
+
+/* ---------- Übungsrunde (für alle Übungen gleich) ---------- */
+// item: { key, title, back, make() | tasks[] }
+// task: { show, say?, options, answer, fmt?, optClass?, cols?, keepOrder?, sayCorrect?, afterCorrect?(showEl, proceed), onCorrect?,
+//         build?(area, miss, done) for tasks that are not "tap one of the answers" }
+function renderQuiz(item){
+  const total = item.tasks ? item.tasks.length : 10;
+  let n = 0, score = 0;
+  const wrap = document.createElement('div');
+  wrap.className = 'flex-1 flex flex-col relative z-10';
+  wrap.appendChild(header(item.title, item.back));
+  const body = document.createElement('div');
+  body.className = 'flex-1 flex flex-col items-center px-6 pb-8 max-w-md mx-auto w-full';
+  wrap.appendChild(body);
+  app.appendChild(wrap);
+
+  function next(){
+    if (!wrap.isConnected) return; // child left the exercise meanwhile
+    if (n >= total) return finish();
+    const task = item.tasks ? item.tasks[n] : item.make();
+    let firstTry = true;
+    body.innerHTML = `
+      <div class="flex gap-1 mb-4">${Array.from({ length: total }, (_, i) => `<span class="dot ${i < n ? 'on' : ''}"></span>`).join('')}</div>
+      <div id="qShow" class="w-full flex flex-col items-center mb-4">${task.show}</div>
+      ${task.say ? '<button id="qHear" class="tile w-20 h-20 text-4xl mb-6">🔊</button>' : ''}
+      <div id="qArea" class="grid ${task.cols === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-4 w-full"></div>
+    `;
+    if (task.say){ document.getElementById('qHear').onclick = () => speak(task.say); speak(task.say); }
+    const area = document.getElementById('qArea');
+    const done = () => { if (!wrap.isConnected) return; if (firstTry) score++; n++; celebrate(next); };
+    if (task.build) return task.build(area, () => { firstTry = false; }, done);
+
+    (task.keepOrder ? task.options : shuffle(task.options)).forEach(opt => {
+      const b = document.createElement('button');
+      b.className = `tile ${task.optClass || 'font-display text-4xl font-800'} py-5 px-2`;
+      b.style.color = 'var(--moss-dark)';
+      b.innerHTML = task.fmt ? task.fmt(opt) : opt;
+      b.onclick = () => {
+        if (opt !== task.answer){
+          firstTry = false;
+          b.disabled = true;
+          b.style.opacity = '.35';
+          return shake(b);
+        }
+        area.style.pointerEvents = 'none';
+        if (task.say) document.getElementById('qHear').style.pointerEvents = 'none'; // would cut off afterCorrect speech
+        b.style.background = '#DCEFD8';
+        if (task.onCorrect) task.onCorrect();
+        if (task.sayCorrect) speak(task.sayCorrect);
+        if (task.afterCorrect) task.afterCorrect(document.getElementById('qShow'), done);
+        else setTimeout(done, task.sayCorrect ? 1800 : 300);
+      };
+      area.appendChild(b);
+    });
+  }
+
+  function finish(){
+    const needed = Math.ceil(total * 0.8), star = score >= needed;
+    if (star){ progress.stars[item.key] = true; saveProgress(); }
+    const msg = star ? 'Super, du hast einen Stern!' : `Für einen Stern brauchst du ${needed} richtige. Probier es nochmal!`;
+    body.innerHTML = `
+      <div class="text-8xl mt-8 mb-4 pop">${star ? '⭐' : '🌱'}</div>
+      <div class="font-display text-2xl text-center mb-2">${score} von ${total} beim ersten Versuch richtig</div>
+      <p class="font-display text-lg text-center mb-8">${msg}</p>
+      <div class="grid grid-cols-2 gap-3 w-full">
+        <button id="againBtn" class="btn py-4 text-white text-lg" style="background:var(--moss)">Nochmal</button>
+        <button id="doneBtn" class="btn py-4 text-white text-lg" style="background:var(--bark)">Fertig</button>
+      </div>
+    `;
+    speak(msg);
+    document.getElementById('againBtn').onclick = () => { n = 0; score = 0; next(); };
+    document.getElementById('doneBtn').onclick = item.back;
+  }
+
+  next();
+}
+
+/* ---------- Menüseiten (Klasse 2 Deutsch, Mathe …) ---------- */
+function renderHub(menuId){
+  const m = MENUS[menuId];
+  const wrap = document.createElement('div');
+  wrap.className = 'hills flex-1 flex flex-col relative z-10';
+  wrap.appendChild(header(m.title, m.back));
+  const grid = document.createElement('div');
+  grid.className = 'grid grid-cols-2 sm:grid-cols-3 gap-4 px-5 py-4 max-w-md sm:max-w-2xl mx-auto w-full';
+  m.items.forEach(it => {
+    const keys = it.keys || (it.menu ? MENUS[it.menu].items.map(s => s.key) : [it.key]);
+    const got = keys.filter(k => progress.stars[k]).length;
+    const tile = document.createElement('button');
+    tile.className = `tile ${got === keys.length ? 'mastered' : ''} aspect-square flex flex-col items-center justify-center gap-1 p-2`;
+    tile.innerHTML = `
+      <div class="text-5xl">${it.emoji}</div>
+      <div class="font-display text-lg leading-tight text-center" style="color:var(--moss-dark)">${it.label}</div>
+      <div class="text-sm h-5">${keys.length > 1 ? `${got}/${keys.length} ⭐` : got ? '⭐' : ''}</div>
+    `;
+    tile.onclick = it.open || (it.menu
+      ? () => go('hub', { menu: it.menu })
+      : () => go('quiz', { item: { ...it, title: it.label, back: () => go('hub', { menu: menuId }) } }));
+    grid.appendChild(tile);
+  });
+  wrap.appendChild(grid);
+  app.appendChild(wrap);
+}
+
+/* ---------- Mathe ---------- */
+const flip = x => x > 9 && x < 100 && x % 10 ? +String(x).split('').reverse().join('') : x; // 47 -> 74
+function calcTask(text, answer, candidates, hi){
+  return {
+    show: `<div class="font-display text-6xl font-800 my-8" style="color:var(--moss-dark)">${text} = ?</div>`,
+    options: choices(answer, candidates, 0, hi), answer,
+  };
+}
+function plus20(){
+  const a = rand(1, 10), b = rand(1, 10), s = a + b;
+  return calcTask(`${a} + ${b}`, s, [s - 1, s + 1, s - 2, s + 2, s - 10, Math.abs(a - b)], 20);
+}
+function minus20(){
+  const b = rand(1, 10), a = rand(b, 20), r = a - b;
+  return calcTask(`${a} − ${b}`, r, [r - 1, r + 1, r - 2, r + 2, r + 10, a + b], 20);
+}
+function plus100(tens){
+  if (tens){
+    const a = rand(1, 9) * 10, b = rand(1, 10 - a / 10) * 10, s = a + b;
+    return calcTask(`${a} + ${b}`, s, [s - 10, s + 10, s - 20, s + 20], 100);
+  }
+  const a = rand(11, 89), b = rand(2, 100 - a), s = a + b;
+  // typical mistakes: forgot the carry (s - 10), added only the ones, swapped digits
+  return calcTask(`${a} + ${b}`, s, [s - 1, s + 1, s - 10, s + 10, flip(s), a + b % 10], 100);
+}
+function minus100(tens){
+  if (tens){
+    const a = rand(2, 10) * 10, b = rand(1, a / 10) * 10, r = a - b;
+    return calcTask(`${a} − ${b}`, r, [r - 10, r + 10, r - 20, r + 20], 100);
+  }
+  const a = rand(20, 100), b = rand(2, a - 1), r = a - b;
+  // typical mistake: subtracting the smaller ones digit from the bigger one (83 − 29 -> 66)
+  const onesSwapped = (Math.floor(a / 10) - Math.floor(b / 10)) * 10 + Math.abs(a % 10 - b % 10);
+  return calcTask(`${a} − ${b}`, r, [r - 1, r + 1, r - 10, r + 10, flip(r), onesSwapped], 100);
+}
+function einmaleins(){
+  const a = rand(1, 10), b = rand(1, 10), p = a * b;
+  return calcTask(`${a} · ${b}`, p, [(a + 1) * b, (a - 1) * b, a * (b + 1), a * (b - 1), p + 1, p - 1, a + b], 100);
+}
+// Zwanzigerfeld / Hunderterfeld: rows of 10 with a gap after 5, filled row by row
+function fieldTask(max){
+  const n = rand(1, max), size = max > 20 ? 18 : 26;
+  let rows = '';
+  for (let r = 0; r < max / 10; r++){
+    let cells = '';
+    for (let c = 0; c < 10; c++){
+      const on = r * 10 + c < n;
+      cells += `<span style="width:${size}px;height:${size}px;border-radius:50%;margin-left:${c === 5 ? 8 : 0}px;border:2px solid ${on ? 'var(--berry)' : '#D9CFB5'};background:${on ? 'var(--berry)' : 'transparent'}"></span>`;
+    }
+    rows += `<div class="flex" style="gap:4px;margin-top:${r === 5 ? 8 : 0}px">${cells}</div>`;
+  }
+  return {
+    show: `<div class="tile p-4 flex flex-col" style="gap:4px">${rows}</div>`,
+    say: 'Wie viele Punkte?',
+    options: choices(n, [n - 1, n + 1, n - 2, n + 2, n - 5, n + 5, n - 10, n + 10, flip(n)], 1, max), answer: n,
+  };
+}
+
+/* ---------- Uhr ---------- */
+const CLOCK_MINUTES = { 1:[0, 30], 2:[0, 15, 30, 45], 3:Array.from({ length:12 }, (_, i) => i * 5) };
+const clockVal = (h, m) => ((h + 11) % 12 + 1) * 60 + m; // wraps the hour into 1..12
+const fmtTime = v => `${Math.floor(v / 60)}:${String(v % 60).padStart(2, '0')}`;
+function timeWords(v){
+  const h = Math.floor(v / 60), m = v % 60, next = h % 12 + 1;
+  if (m === 0) return `${h} Uhr`;
+  if (m === 30) return `halb ${next}`;
+  if (m === 15) return `Viertel nach ${h}`;
+  if (m === 45) return `Viertel vor ${next}`;
+  return m < 30 ? `${m} nach ${h}` : `${60 - m} vor ${next}`;
+}
+function clockSvg(h, m){
+  const at = (deg, r) => { const a = (deg - 90) * Math.PI / 180; return [100 + r * Math.cos(a), 100 + r * Math.sin(a)]; };
+  const line = (deg, r1, r2, w, color) => {
+    const [x1, y1] = at(deg, r1), [x2, y2] = at(deg, r2);
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>`;
+  };
+  let face = '';
+  for (let i = 0; i < 60; i++) face += line(i * 6, i % 5 ? 84 : 77, 90, i % 5 ? 1.5 : 3.5, '#5B4636');
+  for (let i = 1; i <= 12; i++){
+    const [x, y] = at(i * 30, 64);
+    face += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="19" font-weight="800" fill="#5B4636">${i}</text>`;
+  }
+  return `<svg viewBox="0 0 200 200" width="230" height="230" class="mb-2">
+    <circle cx="100" cy="100" r="96" fill="#FBF8F1" stroke="#4A7856" stroke-width="6"/>${face}
+    ${line((h % 12 + m / 60) * 30, 0, 45, 9, '#5B4636')}${line(m * 6, 0, 74, 5, '#D9667A')}
+    <circle cx="100" cy="100" r="6" fill="#5B4636"/></svg>`;
+}
+function clockTask(stage){
+  const M = CLOCK_MINUTES[stage], h = rand(1, 12), m = pick(M), answer = clockVal(h, m);
+  // typical mistakes: hour one off (the hour hand is between two numbers), nearby minutes
+  const near = M.filter(x => x !== m && Math.abs(x - m) <= (stage === 3 ? 10 : 30));
+  const candidates = [clockVal(h + 1, m), clockVal(h - 1, m), ...near.map(x => clockVal(h, x)), ...near.map(x => clockVal(h + 1, x))];
+  return {
+    show: clockSvg(h, m), say: 'Wie spät ist es?',
+    options: choices(answer, candidates, 0, 9999), answer, fmt: fmtTime,
+    sayCorrect: `Es ist ${timeWords(answer)}.`,
+  };
+}
+
+/* ---------- Geld (Beträge in Cent) ---------- */
+const NOTE_COLORS = { 500:'#8E9B90', 1000:'#D9667A', 2000:'#5A8FD0', 5000:'#E8953A' };
+const fmtMoney = c => c % 100 ? `${Math.floor(c / 100)},${String(c % 100).padStart(2, '0')} €` : `${c / 100} €`;
+function moneyPiece(c){
+  if (NOTE_COLORS[c]) return `<span class="inline-flex items-center justify-center font-display font-800 text-white text-xl" style="width:88px;height:48px;border-radius:6px;background:${NOTE_COLORS[c]}">${c / 100} €</span>`;
+  const size = { 200:58, 100:54, 50:50, 20:46, 10:42 }[c];
+  // 1 €: silver centre, gold ring; 2 €: gold centre, silver ring; cent coins: gold
+  const [inner, ring] = c === 100 ? ['#D5D8DC', '#E3C567'] : c === 200 ? ['#E3C567', '#D5D8DC'] : ['#E3C567', '#C9A53E'];
+  return `<span class="inline-flex items-center justify-center font-display font-800" style="width:${size}px;height:${size}px;border-radius:50%;background:${inner};border:5px solid ${ring};color:#5B4636;font-size:15px;line-height:1">${c >= 100 ? c / 100 + ' €' : c + ' ct'}</span>`;
+}
+function moneyTask(stage){
+  const denoms = stage === 1 ? [2000, 1000, 500, 200, 100] : [5000, 2000, 1000, 500, 200, 100, 50, 20, 10];
+  const total = stage === 1 ? rand(1, 20) * 100 : rand(1, 99) * 100 + rand(1, 9) * 10;
+  const pieces = [];
+  // one of the two biggest pieces that still fit, so amounts don't turn into piles of small coins
+  for (let rest = total; rest > 0; ){ const d = pick(denoms.filter(x => x <= rest).slice(0, 2)); pieces.push(d); rest -= d; }
+  pieces.sort((a, b) => b - a);
+  const step = stage === 1 ? 100 : 10;
+  // typical mistakes: a piece forgotten or counted twice, a euro or ten off
+  const candidates = [total - pieces[0], total + pieces[pieces.length - 1], total + 100, total - 100, total + 1000, total - 1000,
+    ...(stage === 2 ? [total + 10, total - 10, total + 50, total - 50] : [total + 200, total - 200])];
+  const euros = Math.floor(total / 100), cents = total % 100;
+  return {
+    show: `<div class="tile p-4 flex flex-wrap gap-2 justify-center items-center w-full">${pieces.map(moneyPiece).join('')}</div>`,
+    say: 'Wie viel Geld ist das?',
+    options: choices(total, candidates, step, stage === 1 ? 3000 : 10000, step), answer: total,
+    fmt: fmtMoney, optClass: 'font-display text-3xl font-800',
+    sayCorrect: `${euros} Euro${cents ? ` ${cents}` : ''}`,
+  };
+}
+
+/* ---------- Deutsch Klasse 2 ---------- */
+// '🍌 Ba-na-ne': emoji, then the word split into syllables
+const SILBEN = [
+  '⚽ Ball', '🐶 Hund', '🐭 Maus', '🌳 Baum', '🍦 Eis', '🏠 Haus', '🚢 Schiff', '⭐ Stern',
+  '🐰 Ha-se', '🐱 Kat-ze', '☀️ Son-ne', '🌸 Blu-me', '🌹 Ro-se', '🚗 Au-to', '👜 Ta-sche', '🐉 Dra-che',
+  '🍐 Bir-ne', '🍎 Ap-fel', '🦓 Ze-bra', '👖 Ho-se',
+  '🍌 Ba-na-ne', '🍅 To-ma-te', '🐘 E-le-fant', '🚀 Ra-ke-te', '☎️ Te-le-fon', '🐊 Kro-ko-dil',
+  '🦋 Schmet-ter-ling', '🥕 Ka-rot-te', '🐧 Pin-gu-in', '🦜 Pa-pa-gei', '🍍 A-na-nas', '🚁 Hub-schrau-ber',
+  '🌈 Re-gen-bo-gen', '🍫 Scho-ko-la-de', '🛁 Ba-de-wan-ne', '🔦 Ta-schen-lam-pe', '🥗 Gur-ken-sa-lat',
+].map(s => { const [e, w] = s.split(' '); return { e, parts: w.split('-') }; });
+
+// Recorded clips "Katze … Kat … ze" in silben/<word>.m4a (speech synthesis can't say lone syllables).
+// silben.json: when each syllable starts in its clip, in seconds.
+let SILBEN_TIMES = {};
+fetch('silben/silben.json').then(r => r.json()).then(t => { SILBEN_TIMES = t; }).catch(() => {});
+
+function silbenTask(x){
+  const word = x.parts.join(''), name = word.toLowerCase();
+  // load the clip now, so it can start right inside the tap (iPad only plays audio started by a tap)
+  let clipUrl = null;
+  if (SILBEN_TIMES[name]) fetch(`silben/${name}.m4a`)
+    .then(r => r.ok ? r.blob() : null).then(b => { if (b) clipUrl = URL.createObjectURL(b); }).catch(() => {});
+  return {
+    show: `<div class="text-6xl mb-2">${x.e}</div>
+      <div id="silbenWort" class="font-display text-4xl font-800" style="color:var(--moss-dark)">${word}</div>
+      <div class="font-display text-lg mt-2">Wie viele Silben?</div>`,
+    say: word,
+    options: [1, 2, 3, 4], keepOrder: true, answer: x.parts.length,
+    // recording: whole word, then syllable by syllable; each syllable (blue/red like in school) pops while it is spoken
+    afterCorrect(el, proceed){
+      const wordEl = el.querySelector('#silbenWort');
+      wordEl.innerHTML = x.parts.map((p, i) => `<span style="display:inline-block;color:${i % 2 ? 'var(--berry)' : '#3B6FB6'}">${p}</span>`).join('');
+      const spans = [...wordEl.children];
+      let finished = false;
+      const finish = () => { if (!finished){ finished = true; proceed(); } };
+      const fallback = () => { speak(word); setTimeout(finish, 1800); }; // one-syllable words, or clip not loaded
+      setTimeout(finish, 10000); // never get stuck if audio events don't fire
+      if (!clipUrl) return fallback();
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
+      const audio = new Audio(clipUrl);
+      audio.onplaying = () => SILBEN_TIMES[name].forEach((t, i) => setTimeout(() => { spans[i].style.animation = 'pop .45s ease-out'; }, t * 1000));
+      audio.onended = () => setTimeout(finish, 400);
+      audio.play().catch(fallback);
+    },
+  };
+}
+
+const SCHREIBWOERTER = [
+  '👵 Oma', '👩 Mama', '👨 Papa', '👒 Hut', '🛋️ Sofa', '👃 Nase', '🌹 Rose', '👖 Hose', '🦔 Igel', '🦆 Ente',
+  '🦙 Lama', '🐳 Wal', '🍅 Tomate', '🍌 Banane', '🍄 Pilz', '🌙 Mond', '✋ Hand', '💡 Lampe', '☁️ Wolke', '🐫 Kamel',
+  '🦓 Zebra', '🚀 Rakete', '🐯 Tiger', '🐭 Maus', '🚗 Auto', '🌸 Blume', '🍞 Brot', '🦁 Löwe', '🧀 Käse', '🎁 Paket',
+].map(s => { const [e, w] = s.split(' '); return { e, w }; });
+
+function schreibTask(x){
+  const chars = [...x.w];
+  return {
+    show: `<div class="text-7xl mb-2">${x.e}</div><div class="font-display text-lg">Schreibe das Wort</div>`,
+    say: x.w,
+    build(area, miss, done){
+      area.className = 'w-full flex flex-col items-center gap-6';
+      area.innerHTML = '<div id="slots" class="flex gap-2 flex-wrap justify-center"></div><div id="pool" class="flex gap-2 flex-wrap justify-center"></div>';
+      const slots = chars.map(() => {
+        const s = document.createElement('div');
+        s.className = 'letterform text-3xl w-12 h-14 flex items-center justify-center rounded-xl';
+        s.style.border = '3px dashed #D9CFB5';
+        s.style.color = 'var(--moss-dark)';
+        area.querySelector('#slots').appendChild(s);
+        return s;
+      });
+      const lower = x.w.toLowerCase();
+      const extra = shuffle([...'abdefgiklmnoprstuw'].filter(c => !lower.includes(c))).slice(0, 3);
+      let pos = 0;
+      shuffle([...chars, ...extra]).forEach(ch => {
+        const b = document.createElement('button');
+        b.className = 'tile letterform text-3xl w-14 h-16';
+        b.style.color = 'var(--moss-dark)';
+        b.textContent = ch;
+        b.onclick = () => {
+          if (ch !== chars[pos]){
+            miss();
+            // grey out only letters that are not needed later in the word
+            if (!chars.slice(pos).includes(ch)){ b.disabled = true; b.style.opacity = '.35'; }
+            return shake(b);
+          }
+          slots[pos].textContent = ch;
+          slots[pos].style.border = '3px solid var(--moss)';
+          b.style.visibility = 'hidden';
+          pos++;
+          if (pos < chars.length) return speak(letterSound(ch));
+          speak(x.w);
+          setTimeout(done, 1200);
+        };
+        area.querySelector('#pool').appendChild(b);
+      });
+    },
+  };
+}
+
+// 'sentence|right wrong wrong wrong' (pictures as emoji pairs)
+const SAETZE = [
+  'Der Hund spielt mit dem Ball.|🐶⚽ 🐱⚽ 🐶🦴 🐭⚽',
+  'Die Katze trinkt Milch.|🐱🥛 🐶🥛 🐱🐟 🐮🥛',
+  'Die Maus frisst Käse.|🐭🧀 🐭🍎 🐱🧀 🐰🥕',
+  'Der Hase isst eine Karotte.|🐰🥕 🐰🍎 🐭🥕 🐴🥕',
+  'Das Kind fährt Fahrrad.|🧒🚲 🧒🚗 👵🚲 🧒🛴',
+  'Oma liest ein Buch.|👵📖 👴📖 👵☕ 👧📖',
+  'Opa trinkt Kaffee.|👴☕ 👵☕ 👴📖 👴🥛',
+  'Der Fisch schwimmt im Wasser.|🐟🌊 🐸🌊 🐳🌊 🐟🍽️',
+  'Die Sonne scheint auf das Haus.|☀️🏠 🌙🏠 ☀️🌳 🌧️🏠',
+  'Der Mond und die Sterne leuchten.|🌙⭐ ☀️⭐ 🌙☁️ ☀️☁️',
+  'Das Mädchen isst ein Eis.|👧🍦 👦🍦 👧🍎 👵🍦',
+  'Der Junge spielt Fußball.|👦⚽ 👧⚽ 👦🏀 👴⚽',
+  'Die Biene sitzt auf der Blume.|🐝🌻 🦋🌻 🐝🍯 🐞🌻',
+  'Der Vogel sitzt im Baum.|🐦🌳 🐿️🌳 🐦🏠 🐱🌳',
+  'Im Regen braucht man einen Schirm.|🌧️☂️ ☀️😎 ❄️🧤 🌧️👒',
+  'Im Winter baut das Kind einen Schneemann.|❄️⛄ ❄️🛷 ☀️🏖️ 🌸🐝',
+  'Der Bauer fährt Traktor.|👨‍🌾🚜 👨‍🌾🚗 👩‍🍳🚜 👨‍🌾🚲',
+  'Die Kuh steht auf der Wiese.|🐮🌾 🐷🌾 🐮🏠 🐑🌾',
+  'Papa kocht Suppe.|👨🍲 👩🍲 👨🍕 👵🍲',
+  'Das Baby schläft.|👶😴 👶🍼 🧒😴 👶🧸',
+  'Der Zug fährt über die Brücke.|🚂🌉 🚗🌉 🚂⛰️ 🚢🌉',
+].map(s => { const [t, pics] = s.split('|'); return { t, pics: pics.split(' ') }; });
+
+function satzTask(x){
+  return {
+    show: `<div class="tile p-5 font-display text-2xl text-center w-full">${x.t}</div>
+      <div class="font-display text-lg mt-3">Welches Bild passt?</div>`,
+    options: x.pics, answer: x.pics[0], optClass: 'text-5xl',
+  };
+}
+
+// 'emoji right wrong [wrong]': Nomen groß, ie, doppelte Mitlaute, ck, tz
+const RECHTSCHREIBUNG = [
+  '🐶 Hund hund', '🌳 Baum baum', '🌸 Blume blume', '🚗 Auto auto', '🏠 Haus haus', '🐭 Maus maus',
+  '🐝 Biene Bine', '✉️ Brief Brif', '🪞 Spiegel Spigel', '🐐 Ziege Zige', '🌿 Wiese Wise', '7️⃣ sieben siben',
+  '☀️ Sonne Sone', '☕ Tasse Tase', '⚽ Ball Bal', '🍽️ Teller Teler', '💧 Wasser Waser', '🚢 Schiff Schif', '👩 Mutter Muter',
+  '🧥 Jacke Jake Jakke', '🍬 Zucker Zuker Zukker', '🔔 Glocke Gloke Glokke', '🧦 Socke Soke Sokke', '🌉 Brücke Brüke Brükke',
+  '🐱 Katze Kaze Katse', '🧢 Mütze Müze Mütse', '⚡ Blitz Bliz Blits', '🐦 Spatz Spaz Spats', '💰 Schatz Schaz Schats',
+].map(s => { const [e, w, ...wrong] = s.split(' '); return { e, w, wrong }; });
+
+function rechtschreibTask(x){
+  return {
+    show: `<div class="text-7xl mb-2">${x.e}</div><div class="font-display text-lg">Wie schreibt man das richtig?</div>`,
+    say: x.w,
+    options: [x.w, ...x.wrong], answer: x.w, cols: 1, optClass: 'font-display text-3xl font-700',
+  };
+}
+
+/* ---------- Menüs ---------- */
+const MENUS = {
+  deutsch2: { title:'Deutsch · Klasse 2', back: () => go('grade', { subject:'deutsch' }), items:[
+    { key:'d2-silben', emoji:'👏', label:'Silben', make: deck(SILBEN, silbenTask) },
+    { key:'d2-schreiben', emoji:'✏️', label:'Wörter schreiben', make: deck(SCHREIBWOERTER, schreibTask) },
+    { key:'d2-saetze', emoji:'📜', label:'Sätze lesen', make: deck(SAETZE, satzTask) },
+    { key:'d2-rechtschreibung', emoji:'🔍', label:'Richtig schreiben', make: deck(RECHTSCHREIBUNG, rechtschreibTask) },
+    { emoji:'📚', label:'Selbst lesen', keys: STORIES.filter(s => s.questions).map(s => 'story-' + s.id),
+      open: () => go('stories', { self:true }) },
+  ]},
+  mathe1: { title:'Mathe · Klasse 1', back: () => go('grade', { subject:'mathe' }), items:[
+    { key:'m1-feld', emoji:'🔴', label:'Zwanzigerfeld', make: () => fieldTask(20) },
+    { key:'m1-plus', emoji:'➕', label:'Plus bis 20', make: plus20 },
+    { key:'m1-minus', emoji:'➖', label:'Minus bis 20', make: minus20 },
+  ]},
+  mathe2: { title:'Mathe · Klasse 2', back: () => go('grade', { subject:'mathe' }), items:[
+    { key:'m2-feld', emoji:'💯', label:'Hunderterfeld', make: () => fieldTask(100) },
+    { emoji:'➕', label:'Plus bis 100', menu:'plus100' },
+    { emoji:'➖', label:'Minus bis 100', menu:'minus100' },
+    { key:'m2-einmaleins', emoji:'✖️', label:'Einmaleins', make: einmaleins },
+    { emoji:'🕐', label:'Uhr', menu:'uhr' },
+    { emoji:'💶', label:'Geld', menu:'geld' },
+  ]},
+  uhr: { title:'Uhr', back: () => go('hub', { menu:'mathe2' }), items:[
+    { key:'m2-uhr-1', emoji:'🕐', label:'Volle & halbe Stunde', make: () => clockTask(1) },
+    { key:'m2-uhr-2', emoji:'🕒', label:'Viertelstunden', make: () => clockTask(2) },
+    { key:'m2-uhr-3', emoji:'🕔', label:'5 Minuten', make: () => clockTask(3) },
+  ]},
+  geld: { title:'Geld', back: () => go('hub', { menu:'mathe2' }), items:[
+    { key:'m2-geld-1', emoji:'🪙', label:'Bis 20 €', make: () => moneyTask(1) },
+    { key:'m2-geld-2', emoji:'💶', label:'Bis 100 € mit Cent', make: () => moneyTask(2) },
+  ]},
+  plus100: { title:'Plus bis 100', back: () => go('hub', { menu:'mathe2' }), items:[
+    { key:'m2-plus-zehner', emoji:'🔟', label:'Glatte Zehner', make: () => plus100(true) },
+    { key:'m2-plus-gemischt', emoji:'🔢', label:'Gemischt', make: () => plus100(false) },
+  ]},
+  minus100: { title:'Minus bis 100', back: () => go('hub', { menu:'mathe2' }), items:[
+    { key:'m2-minus-zehner', emoji:'🔟', label:'Glatte Zehner', make: () => minus100(true) },
+    { key:'m2-minus-gemischt', emoji:'🔢', label:'Gemischt', make: () => minus100(false) },
+  ]},
+};
 
 /* ---------- Start ---------- */
 render();
