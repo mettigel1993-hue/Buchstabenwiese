@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Buchstabenwiese</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --moss:#4A7856;
+    --moss-dark:#345940;
+    --meadow:#EFF6ED;
+    --bark:#5B4636;
+    --honey:#F0A93B;
+    --berry:#D9667A;
+    --sky:#BFE1E8;
+    --cream:#FBF8F1;
+    --lavender:#9B7FC7;
+  }
+  *{ -webkit-tap-highlight-color: transparent; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family:'Nunito',sans-serif;
+    background: linear-gradient(180deg, var(--sky) 0%, var(--meadow) 45%, var(--meadow) 100%);
+    color:var(--bark);
+    overscroll-behavior:none;
+    user-select:none;
+  }
+  .font-display{ font-family:'Baloo 2', sans-serif; }
+  .letterform{ font-family:'Nunito', sans-serif; font-weight:800; }
+  #app{ min-height:100vh; display:flex; flex-direction:column; }
+  .hills::before{
+    content:"";
+    position:fixed; left:0; right:0; bottom:0; height:14vh; min-height:80px;
+    background: var(--moss);
+    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    transform: scaleX(1.4);
+    opacity:.9;
+    z-index:0;
+    pointer-events:none;
+  }
+  .tile{
+    background: var(--cream);
+    border: 3px solid #E4DCC8;
+    border-radius: 26px;
+    box-shadow: 0 4px 0 #E4DCC8;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .tile:active{ transform: translateY(3px); box-shadow: 0 1px 0 #E4DCC8; }
+  .tile.mastered{ border-color: var(--honey); box-shadow: 0 4px 0 var(--honey); }
+  .btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    border-radius:20px;
+    box-shadow: 0 4px 0 rgba(0,0,0,.15);
+    transition: transform .1s ease, box-shadow .1s ease;
+  }
+  .btn:active{ transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.15); }
+  .dot{ width:10px; height:10px; border-radius:50%; background:#DDD3B8; }
+  .dot.on{ background: var(--moss); }
+  @keyframes shake{
+    10%,90%{ transform: translateX(-3px); }
+    20%,80%{ transform: translateX(5px); }
+    30%,50%,70%{ transform: translateX(-8px); }
+    40%,60%{ transform: translateX(8px); }
+  }
+  .shake{ animation: shake .5s; }
+  @keyframes pop{
+    0%{ transform: scale(.6); opacity:0; }
+    60%{ transform: scale(1.12); opacity:1; }
+    100%{ transform: scale(1); }
+  }
+  .pop{ animation: pop .35s ease-out; }
+  @keyframes pulseDot{
+    0%,100%{ transform: scale(1); opacity:1; }
+    50%{ transform: scale(1.4); opacity:.6; }
+  }
+  .pulse{ animation: pulseDot 1s ease-in-out infinite; }
+  @keyframes floatUp{
+    0%{ transform: translateY(0) scale(1); opacity:1; }
+    100%{ transform: translateY(-70px) scale(1.4); opacity:0; }
+  }
+  .confetti{ position:absolute; font-size:22px; animation: floatUp 1s ease-out forwards; pointer-events:none; }
+  canvas{ touch-action:none; display:block; }
+  .story-sentence{ transition: background .25s ease; }
+  .story-highlight{ background: var(--honey); border-radius:6px; box-shadow: 0 0 0 3px var(--honey); }
+  .story-word{ cursor:pointer; border-bottom:2px dotted #B9AE8E; }
+  .story-word:active{ border-bottom-color: var(--lavender); color: var(--lavender); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ---------- Daten ---------- */
+const LETTERS = [
+  { id:'a', sound:'a', word:'Ameise', emoji:'🐜',
+    lower:[[[62,48],[54,43],[44,42],[36,46],[31,56],[33,67],[41,77],[52,80],[61,76],[65,66],[65,55],[63,48],[64,60],[65,80]]],
+    upper:[[[28,80],[50,17],[72,80]],[[38,56],[62,56]]] },
+  { id:'m', sound:'m', word:'Maus', emoji:'🐭',
+    lower:[[[24,80],[24,45],[30,42],[38,45],[40,80],[40,50],[46,42],[54,42],[60,45],[62,80]]],
+    upper:[[[22,80],[22,17],[50,55],[78,17],[78,80]]] },
+  { id:'i', sound:'i', word:'Igel', emoji:'🦔',
+    lower:[[[50,45],[50,80]],[[50,18],[50,20]]],
+    upper:[[[50,17],[50,80]]] },
+  { id:'t', sound:'t', word:'Tiger', emoji:'🐯',
+    lower:[[[50,20],[50,72],[54,78],[59,76]],[[32,46],[68,46]]],
+    upper:[[[22,20],[78,20]],[[50,20],[50,80]]] },
+  { id:'o', sound:'o', word:'Oma', emoji:'👵',
+    lower:[[[60,46],[52,42],[43,42],[35,47],[31,56],[32,67],[39,77],[49,80],[58,77],[63,68],[64,57],[60,46]]],
+    upper:[[[62,22],[50,17],[38,22],[28,35],[25,50],[28,65],[38,78],[50,80],[62,78],[72,65],[75,50],[72,35],[62,22]]] },
+  { id:'l', sound:'l', word:'Löwe', emoji:'🦁',
+    lower:[[[50,17],[50,70],[54,78],[60,76]]],
+    upper:[[[28,17],[28,80],[68,80]]] },
+];
+const WORDS = [
+  { text:'Oma', emoji:'👵' }, { text:'Mia', emoji:'👧' }, { text:'Tom', emoji:'👦' },
+  { text:'Tal', emoji:'🏞️' }, { text:'Lamm', emoji:'🐑' }, { text:'Aal', emoji:'🐟' },
+  { text:'Otto', emoji:'👴' }, { text:'malt', emoji:'🎨' }, { text:'toll', emoji:'⭐' },
+];
+const STORIES = [
+  {
+    id: 'luna',
+    title: 'Luna, das mutige Einhorn',
+    emoji: '🦄',
+    pages: [
+      'Tief im Zauberwald lebte ein kleines Einhorn namens Luna. Ihr Fell glänzte silbern wie der Mond, und ihr Horn schimmerte in allen Farben des Regenbogens.',
+      'Alle Einhörner im Wald konnten hoch über die Baumwipfel fliegen. Nur Luna blieb immer am Boden. Das machte sie traurig.',
+      '„Warum kann ich nicht fliegen wie die anderen?“, fragte Luna die alte Eule Frieda. Frieda blinzelte weise und sagte: „Vielleicht hast du einfach noch nicht geübt.“',
+      'Am nächsten Morgen führte Frieda Luna auf einen sanften Hügel. Von dort aus konnte man den ganzen Wald sehen.',
+      '„Komm, wir üben zusammen“, sagte Frieda. Doch Luna zitterte. „Ich habe Angst, dass ich falle“, flüsterte sie.',
+      '„Das ist ganz normal“, sagte Frieda sanft. „Auch ich bin früher gefallen. Aber ich bin immer wieder aufgestanden.“',
+      'Luna atmete tief ein. Der Wind strich durch ihre Mähne. Sie lief los, spannte ihre Flügel aus, und sprang.',
+      'Plumps! Sie landete weich im Gras. Ein paar Blumen kitzelten ihre Nase. Luna musste lachen, obwohl sie es nicht geschafft hatte.',
+      'Sie stand auf, schüttelte sich, und versuchte es noch einmal. Dieses Mal spürte sie etwas Neues: Der Wind trug sie!',
+      'Ihre Hufe hoben vom Boden ab. Erst ein kleines Stück, dann höher und höher, bis sie über die Baumwipfel flog.',
+      'Alle Einhörner im Wald schauten nach oben und jubelten: „Luna fliegt! Luna fliegt!“',
+      'Von diesem Tag an flog Luna jeden Morgen über den Zauberwald. Und sie wusste: Mutig sein heißt nicht, keine Angst zu haben. Es heißt, es trotzdem zu versuchen.',
+    ],
+  },
+  {
+    id: 'pepino',
+    title: 'Pepino und der Sternenstaub',
+    emoji: '🦄',
+    pages: [
+      'Am Rand der Wiese lebte ein kleines Einhorn namens Pepino. Sein Horn war golden und funkelte wie ein Stern.',
+      'Jede Nacht, wenn der Mond aufging, streute Pepino goldenen Sternenstaub über die Wiese. So konnten die Kinder im Dorf schön träumen.',
+      'Eines Abends aber war der Sternenstaub weg. Pepinos kleiner Beutel war leer. „Oh nein“, seufzte Pepino, „ohne Staub gibt es heute keine schönen Träume.“',
+      'Pepino machte sich auf die Suche. Am Bach traf er den Frosch Fridolin. „Hast du meinen Sternenstaub gesehen?“, fragte Pepino.',
+      '„Nein“, quakte Fridolin, „aber ich helfe dir suchen!“ Gemeinsam hüpften sie den Bach entlang.',
+      'Im Wald trafen sie den Igel Pieks. Auch er hatte keinen Sternenstaub gesehen, aber auch er wollte helfen.',
+      'Zu dritt suchten sie zwischen den Blumen, unter den Steinen und hoch oben in den Ästen. Doch der Staub blieb verschwunden.',
+      'Plötzlich hörten sie ein leises Kichern. Hinter einem Busch versteckte sich ein kleiner Waschbär mit glitzernden Pfoten.',
+      '„Entschuldigung“, sagte der Waschbär leise. „Der Staub hat so schön funkelt, ich wollte nur ein bisschen davon.“',
+      'Pepino lächelte. „Das verstehe ich. Aber ohne Staub können die Kinder nicht schön träumen. Willst du mir helfen, ihn zurückzubringen?“',
+      'Der Waschbär nickte und gab den Staub zurück. Gemeinsam mit Fridolin und Pieks trug er ihn zur Wiese.',
+      'Als der Mond aufging, streute Pepino den Sternenstaub wieder über das Dorf. Und weil er so viele Freunde gefunden hatte, funkelte der Staub heller als je zuvor.',
+    ],
+  },
+];
+const STORAGE_KEY = 'buchstabenwiese-progress-v1';
+
+/* ---------- Fortschritt ---------- */
+function defaultProgress(){
+  const p = {};
+  LETTERS.forEach(l => p[l.id] = { lower:false, upper:false, recognizedCount:0 });
+  return p;
+}
+let progress;
+try { progress = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultProgress(); }
+catch(e){ progress = defaultProgress(); }
+function saveProgress(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); }catch(e){} }
+
+/* ---------- Sprachausgabe ---------- */
+let germanVoice = null;
+let speechToken = 0;
+function pickVoice(){
+  const voices = speechSynthesis.getVoices();
+  germanVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('de')) || null;
+}
+if ('speechSynthesis' in window){
+  speechSynthesis.onvoiceschanged = pickVoice;
+  pickVoice();
+}
+function speak(text, rate){
+  if (!('speechSynthesis' in window)) return;
+  speechToken++; // invalidates any running speakChain sequence
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  if (germanVoice) u.voice = germanVoice;
+  u.lang = 'de-DE';
+  u.rate = rate || 0.85;
+  speechSynthesis.speak(u);
+}
+function letterSound(ch){
+  const def = letterById(ch.toLowerCase());
+  return def ? def.sound : ch;
+}
+function speakChain(texts, opts){
+  opts = opts || {};
+  if (!('speechSynthesis' in window)){ if (opts.onDone) opts.onDone(); return; }
+  speechSynthesis.cancel();
+  const myToken = ++speechToken;
+  let i = 0;
+  function next(){
+    if (myToken !== speechToken) return; // a newer speech action took over
+    if (i >= texts.length){ if (opts.onDone) opts.onDone(); return; }
+    if (opts.onIndex) opts.onIndex(i);
+    const u = new SpeechSynthesisUtterance(texts[i]);
+    if (germanVoice) u.voice = germanVoice;
+    u.lang = 'de-DE';
+    u.rate = opts.rate || 0.7;
+    u.onend = () => { if (myToken !== speechToken) return; i++; next(); };
+    speechSynthesis.speak(u);
+  }
+  next();
+}
+
+/* ---------- Navigation ---------- */
+const app = document.getElementById('app');
+let view = 'welcome';
+let ctx = {};
+
+function go(newView, newCtx){
+  view = newView;
+  ctx = newCtx || {};
+  render();
+  window.scrollTo(0,0);
+}
+
+function render(){
+  app.innerHTML = '';
+  if (view === 'welcome') renderWelcome();
+  else if (view === 'map') renderMap();
+  else if (view === 'detail') renderDetail(ctx.id);
+  else if (view === 'trace') renderTrace(ctx.id, ctx.case);
+  else if (view === 'recognize') renderRecognize();
+  else if (view === 'words') renderWords();
+  else if (view === 'wordplay') renderWordPlay(ctx.word);
+  else if (view === 'stories') renderStories();
+  else if (view === 'storyread') renderStoryRead(ctx.id);
+}
+
+function letterById(id){ return LETTERS.find(l => l.id === id); }
+
+function header(title, onBack){
+  const bar = document.createElement('div');
+  bar.className = 'relative z-10 flex items-center gap-3 px-5 pt-5 pb-2';
+  bar.innerHTML = `
+    ${onBack ? `<button id="backBtn" class="btn bg-white text-[var(--bark)] w-11 h-11 flex items-center justify-center text-xl">←</button>` : `<div class="w-11 h-11"></div>`}
+    <h1 class="font-display text-2xl font-700 flex-1 text-center pr-11">${title}</h1>
+  `;
+  if (onBack) bar.querySelector('#backBtn').onclick = onBack;
+  return bar;
+}
+
+/* ---------- Willkommen ---------- */
+function renderWelcome(){
+  const wrap = document.createElement('div');
+  wrap.className = 'hills flex-1 flex flex-col items-center justify-center relative z-10 px-6 text-center';
+  wrap.innerHTML = `
+    <div class="text-7xl mb-4 pop">🌼</div>
+    <h1 class="font-display text-4xl font-800 mb-2" style="color:var(--moss-dark)">Buchstabenwiese</h1>
+    <p class="font-display text-lg mb-8" style="color:var(--bark)">Buchstaben hören, erkennen und schreiben</p>
+    <button id="startBtn" class="btn text-white text-2xl px-10 py-4" style="background:var(--moss)">Los geht's! ▶</button>
+  `;
+  app.appendChild(wrap);
+  document.getElementById('startBtn').onclick = () => {
+    speak('Willkommen auf der Buchstabenwiese!');
+    go('map');
+  };
+}
+
+/* ---------- Karte (Wiese mit allen Buchstaben, frei wählbar) ---------- */
+function renderMap(){
+  const wrap = document.createElement('div');
+  wrap.className = 'hills flex-1 flex flex-col relative z-10';
+  wrap.appendChild(header('Buchstabenwiese', () => go('welcome')));
+
+  const grid = document.createElement('div');
+  grid.className = 'flex-1 grid grid-cols-3 gap-4 px-5 py-4 content-start max-w-md mx-auto w-full';
+  LETTERS.forEach(l => {
+    const pr = progress[l.id];
+    const mastered = pr.lower && pr.upper && pr.recognizedCount >= 2;
+    const tile = document.createElement('button');
+    tile.className = `tile ${mastered ? 'mastered' : ''} aspect-square flex flex-col items-center justify-center gap-1 relative`;
+    tile.innerHTML = `
+      ${mastered ? '<div class="absolute -top-2 -right-2 text-2xl">⭐</div>' : ''}
+      <div class="letterform text-3xl leading-none" style="color:var(--moss-dark)">${l.id.toUpperCase()}${l.id}</div>
+      <div class="flex gap-1 mt-1">
+        <span class="dot ${pr.lower ? 'on':''}"></span>
+        <span class="dot ${pr.upper ? 'on':''}"></span>
+        <span class="dot ${pr.recognizedCount>=2 ? 'on':''}"></span>
+      </div>
+    `;
+    tile.onclick = () => go('detail', { id: l.id });
+    grid.appendChild(tile);
+  });
+  wrap.appendChild(grid);
+
+  const games = document.createElement('div');
+  games.className = 'px-5 pb-6 max-w-md mx-auto w-full flex gap-3';
+  games.innerHTML = `
+    <button id="recBtn" class="btn flex-1 py-3 text-white text-lg" style="background:var(--berry)">🔎 Erkennen</button>
+    <button id="wordBtn" class="btn flex-1 py-3 text-white text-lg" style="background:var(--honey)">📖 Wörter</button>
+  `;
+  wrap.appendChild(games);
+
+  const storyRow = document.createElement('div');
+  storyRow.className = 'px-5 pb-6 max-w-md mx-auto w-full';
+  storyRow.innerHTML = `<button id="storyBtn" class="btn w-full py-4 text-white text-lg" style="background:var(--lavender)">🦄 Geschichten zum Zuhören</button>`;
+  wrap.appendChild(storyRow);
+
+  app.appendChild(wrap);
+
+  document.getElementById('recBtn').onclick = () => go('recognize');
+  document.getElementById('wordBtn').onclick = () => go('words');
+  document.getElementById('storyBtn').onclick = () => go('stories');
+}
+
+/* ---------- Buchstaben-Detail ---------- */
+function renderDetail(id){
+  const l = letterById(id);
+  const pr = progress[id];
+  const wrap = document.createElement('div');
+  wrap.className = 'flex-1 flex flex-col relative z-10';
+  wrap.appendChild(header(`${l.id.toUpperCase()}${l.id}`, () => go('map')));
+
+  const body = document.createElement('div');
+  body.className = 'flex-1 flex flex-col items-center px-6 max-w-md mx-auto w-full';
+  body.innerHTML = `
+    <button id="playSound" class="tile w-full flex flex-col items-center py-6 mb-6">
+      <div class="letterform text-7xl" style="color:var(--moss-dark)">${l.id.toUpperCase()}${l.id}</div>
+      <div class="text-5xl my-2">${l.emoji}</div>
+      <div class="font-display text-xl">${l.word}</div>
+      <div class="text-2xl mt-2">🔊</div>
+    </button>
+    <div class="grid grid-cols-2 gap-3 w-full">
+      <button id="traceLower" class="btn py-4 text-white text-lg" style="background:var(--moss)">
+        ${l.id} üben ${pr.lower ? '✓' : ''}
+      </button>
+      <button id="traceUpper" class="btn py-4 text-white text-lg" style="background:var(--moss)">
+        ${l.id.toUpperCase()} üben ${pr.upper ? '✓' : ''}
+      </button>
+    </div>
+  `;
+  wrap.appendChild(body);
+  app.appendChild(wrap);
+
+  const playIntro = () => speak(`${l.sound}. ${l.word}`);
+  document.getElementById('playSound').onclick = playIntro;
+  document.getElementById('traceLower').onclick = () => go('trace', { id, case:'lower' });
+  document.getElementById('traceUpper').onclick = () => go('trace', { id, case:'upper' });
+  playIntro();
+}
+
+/* ---------- Nachfahren (strict stroke order) ---------- */
+function renderTrace(id, caseType){
+  const l = letterById(id);
+  const strokesNorm = l[caseType];
+  const wrap = document.createElement('div');
+  wrap.className = 'flex-1 flex flex-col relative z-10';
+  wrap.appendChild(header(`${caseType === 'upper' ? id.toUpperCase() : id} schreiben`, () => go('detail', { id })));
+
+  const body = document.createElement('div');
+  body.className = 'flex-1 flex flex-col items-center px-6 max-w-md mx-auto w-full';
+  body.innerHTML = `
+    <div class="tile p-3 mb-4" style="position:relative;">
+      <canvas id="traceCanvas" width="320" height="320" style="width:100%;max-width:320px;height:auto;touch-action:none;"></canvas>
+    </div>
+    <p id="hint" class="font-display text-lg text-center" style="color:var(--bark)">Starte beim Punkt und fahre die Linie nach</p>
+  `;
+  wrap.appendChild(body);
+  app.appendChild(wrap);
+
+  const canvas = document.getElementById('traceCanvas');
+  const hint = document.getElementById('hint');
+  const cctx = canvas.getContext('2d');
+  const SIZE = 320;
+  const TOL = 22; // normalized tolerance (0-100 space) — generous corridor for small hands
+  const WINDOW = 12; // how far ahead we search for a match, so fast/jumpy strokes still register
+  const OFFPATH_MULT = 2.6; // how far off the corridor counts as "drifting"
+  const GRACE_FRAMES = 18; // consecutive drifting frames tolerated before a reset — avoids punishing brief wobbles
+
+  let strokeIdx = 0;
+  let progressIdx = 0;
+  let drawing = false;
+  let offCount = 0;
+  let completedStrokes = []; // arrays of {x,y} in normalized space, one per finished stroke
+
+  function toPx(pt){ return { x: pt[0]/100*SIZE, y: pt[1]/100*SIZE }; }
+  function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+
+  function drawGuideline(pts, color, width, dashed){
+    cctx.beginPath();
+    cctx.setLineDash(dashed ? [8,7] : []);
+    cctx.lineJoin='round'; cctx.lineCap='round';
+    cctx.strokeStyle = color; cctx.lineWidth = width;
+    pts.forEach((p,i) => {
+      const px = toPx(p);
+      if (i===0) cctx.moveTo(px.x, px.y); else cctx.lineTo(px.x, px.y);
+    });
+    cctx.stroke();
+    cctx.setLineDash([]);
+  }
+
+  function redraw(){
+    cctx.clearRect(0,0,SIZE,SIZE);
+    // faint baseline grid
+    cctx.strokeStyle = '#EEE6D2'; cctx.lineWidth = 1;
+    [15,42,80].forEach(y => { cctx.beginPath(); cctx.moveTo(0,y/100*SIZE); cctx.lineTo(SIZE,y/100*SIZE); cctx.stroke(); });
+
+    // all strokes as light guide
+    strokesNorm.forEach((s,i) => {
+      if (i < strokeIdx) return; // already inked below
+      drawGuideline(s, i===strokeIdx ? '#C9BE9E' : '#E9E3D2', 10, true);
+    });
+
+    // completed strokes, inked
+    completedStrokes.forEach(s => drawGuideline(s, 'var(--moss)'.replace('var(--moss)','#4A7856'), 12, false));
+
+    // current in-progress ink
+    if (currentInk.length > 1) drawGuideline(currentInk.map(p=>[p.x/SIZE*100, p.y/SIZE*100]), '#4A7856', 12, false);
+
+    // start dot pulse for current stroke
+    if (!drawing && strokeIdx < strokesNorm.length){
+      const startPt = toPx(strokesNorm[strokeIdx][0]);
+      cctx.beginPath();
+      cctx.arc(startPt.x, startPt.y, 10, 0, Math.PI*2);
+      cctx.fillStyle = '#D9667A';
+      cctx.fill();
+    }
+  }
+
+  let currentInk = [];
+
+  function getPos(evt){
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = SIZE / rect.width, scaleY = SIZE / rect.height;
+    const cx = (evt.clientX !== undefined ? evt.clientX : evt.touches[0].clientX);
+    const cy = (evt.clientY !== undefined ? evt.clientY : evt.touches[0].clientY);
+    return { x: (cx - rect.left) * scaleX, y: (cy - rect.top) * scaleY };
+  }
+
+  function resetStroke(bounce){
+    drawing = false;
+    progressIdx = 0;
+    offCount = 0;
+    currentInk = [];
+    if (bounce){
+      canvas.parentElement.classList.add('shake');
+      setTimeout(()=>canvas.parentElement.classList.remove('shake'), 500);
+    }
+    redraw();
+  }
+
+  function onDown(evt){
+    evt.preventDefault();
+    const pos = getPos(evt);
+    const startPx = toPx(strokesNorm[strokeIdx][0]);
+    if (dist(pos, startPx) <= TOL/100*SIZE * 1.6){
+      drawing = true;
+      progressIdx = 0;
+      offCount = 0;
+      currentInk = [startPx];
+      hint.textContent = 'Weiter der Linie folgen …';
+    } else {
+      canvas.parentElement.classList.add('shake');
+      setTimeout(()=>canvas.parentElement.classList.remove('shake'), 500);
+    }
+  }
+
+  function onMove(evt){
+    if (!drawing) return;
+    evt.preventDefault();
+    const pos = getPos(evt);
+    const stroke = strokesNorm[strokeIdx];
+    let matched = -1;
+    for (let i = progressIdx; i < Math.min(stroke.length, progressIdx + WINDOW); i++){
+      const p = toPx(stroke[i]);
+      if (dist(pos, p) <= TOL/100*SIZE) matched = i;
+    }
+    if (matched >= progressIdx){
+      progressIdx = matched;
+      offCount = 0;
+      currentInk.push(pos);
+      redraw();
+      return;
+    }
+    // keep the ink flowing under the finger even off the exact corridor — feels natural, not laggy
+    currentInk.push(pos);
+    redraw();
+    const targetPx = toPx(stroke[progressIdx]);
+    if (dist(pos, targetPx) > TOL/100*SIZE * OFFPATH_MULT){
+      offCount++;
+      if (offCount > GRACE_FRAMES){
+        resetStroke(true);
+        hint.textContent = 'Nochmal! Starte beim Punkt';
+      }
+    } else {
+      offCount = 0;
+    }
+  }
+
+  function onUp(evt){
+    if (!drawing) return;
+    const stroke = strokesNorm[strokeIdx];
+    if (progressIdx >= stroke.length - 1){
+      completedStrokes.push(stroke);
+      strokeIdx++;
+      drawing = false;
+      currentInk = [];
+      if (strokeIdx >= strokesNorm.length){
+        finishLetter();
+        return;
+      }
+      hint.textContent = 'Gut! Nächster Strich';
+      redraw();
+    } else {
+      resetStroke(true);
+      hint.textContent = 'Nochmal! Bis zum Ende führen';
+    }
+  }
+
+  function finishLetter(){
+    progress[id][caseType] = true;
+    saveProgress();
+    speak(`Super! Das ist ein ${caseType === 'upper' ? 'großes' : 'kleines'} ${id}.`);
+    celebrate(() => go('detail', { id }));
+  }
+
+  canvas.addEventListener('pointerdown', onDown);
+  canvas.addEventListener('pointermove', onMove);
+  canvas.addEventListener('pointerup', onUp);
+  canvas.addEventListener('pointerleave', () => { if (drawing) resetStroke(false); });
+
+  redraw();
+}
+
+/* ---------- Feier-Animation ---------- */
+function celebrate(after){
+  const overlay = document.createElement('div');
+  overlay.className = 'fixed inset-0 flex items-center justify-center z-50';
+  overlay.style.background = 'rgba(255,255,255,.4)';
+  overlay.innerHTML = `<div class="pop text-8xl">⭐</div>`;
+  document.body.appendChild(overlay);
+  const emojis = ['✨','🌟','🎉'];
+  for (let i=0;i<6;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.textContent = emojis[i % emojis.length];
+    c.style.left = (40 + Math.random()*20) + '%';
+    c.style.top = '50%';
+    overlay.appendChild(c);
+  }
+  setTimeout(() => { overlay.remove(); if (after) after(); }, 900);
+}
+
+/* ---------- Erkennen (Multiple Choice) ---------- */
+function renderRecognize(){
+  const wrap = document.createElement('div');
+  wrap.className = 'flex-1 flex flex-col relative z-10';
+  wrap.appendChild(header('Erkennen', () => go('map')));
+
+  let round = 0;
+  const TOTAL_ROUNDS = 5;
+  let target, options;
+
+  const body = document.createElement('div');
+  body.className = 'flex-1 flex flex-col items-center px-6 max-w-md mx-auto w-full';
+  wrap.appendChild(body);
+  app.appendChild(wrap);
+
+  function pickRound(){
+    const l = LETTERS[Math.floor(Math.random()*LETTERS.length)];
+    const isUpper = Math.random() < 0.5;
+    target = { id: l.id, sound: l.sound, display: isUpper ? l.id.toUpperCase() : l.id };
+    const distractors = LETTERS.filter(x => x.id !== l.id)
+      .sort(() => Math.random()-0.5)
+      .slice(0,3)
+      .map(x => (Math.random()<0.5 ? x.id.toUpperCase() : x.id));
+    options = [target.display, ...distractors].sort(() => Math.random()-0.5);
+    renderRound();
+  }
+
+  function renderRound(){
+    body.innerHTML = `
+      <div class="font-display text-lg mb-4">Runde ${round+1} / ${TOTAL_ROUNDS}</div>
+      <button id="hearBtn" class="tile w-32 h-32 flex items-center justify-center text-5xl mb-8">🔊</button>
+      <div class="grid grid-cols-2 gap-4 w-full" id="optGrid"></div>
+    `;
+    const grid = document.getElementById('optGrid');
+    options.forEach(opt => {
+      const b = document.createElement('button');
+      b.className = 'tile letterform text-4xl py-6';
+      b.style.color = 'var(--moss-dark)';
+      b.textContent = opt;
+      b.onclick = () => {
+        if (opt.toLowerCase() === target.id){
+          progress[target.id].recognizedCount++;
+          saveProgress();
+          round++;
+          if (round >= TOTAL_ROUNDS){
+            celebrate(() => go('map'));
+          } else {
+            celebrate(() => pickRound());
+          }
+        } else {
+          b.classList.add('shake');
+          setTimeout(()=>b.classList.remove('shake'), 500);
+        }
+      };
+      grid.appendChild(b);
+    });
+    document.getElementById('hearBtn').onclick = () => speak(target.sound);
+    speak(target.sound);
+  }
+
+  pickRound();
+}
+
+/* ---------- Wörter ---------- */
+function wordReady(word){
+  return [...word.text].every(ch => {
+    const id = ch.toLowerCase();
+    const def = letterById(id);
+    if (!def) return true;
+    const isUpper = ch === ch.toUpperCase() && ch !== ch.toLowerCase();
+    return isUpper ? progress[id].upper : progress[id].lower;
+  });
+}
+
+function renderWords(){
+  const wrap = document.createElement('div');
+  wrap.className = 'flex-1 flex flex-col relative z-10';
+  wrap.appendChild(header('Wörter lesen', () => go('map')));
+
+  const grid = document.createElement('div');
+  grid.className = 'flex-1 grid grid-cols-3 gap-3 px-5 py-4 max-w-md mx-auto w-full content-start';
+  WORDS.forEach(w => {
+    const ready = wordReady(w);
+    const card = document.createElement('button');
+    card.className = `tile ${ready ? 'mastered':''} aspect-square flex flex-col items-center justify-center gap-1`;
+    card.style.opacity = ready ? '1' : '.7';
+    card.innerHTML = `<div class="text-3xl">${w.emoji}</div><div class="font-display text-base">${w.text}</div>`;
+    card.onclick = () => go('wordplay', { word: w });
+    grid.appendChild(card);
+  });
+  wrap.appendChild(grid);
+  app.appendChild(wrap);
+}
+
+function renderWordPlay(word){
+  const wrap = document.createElement('div');
+  wrap.className = 'flex-1 flex flex-col relative z-10';
+  wrap.appendChild(header(word.text, () => go('words')));
+
+  const body = document.createElement('div');
+  body.className = 'flex-1 flex flex-col items-center px-6 max-w-md mx-auto w-full';
+  body.innerHTML = `
+    <div class="text-6xl mb-6">${word.emoji}</div>
+    <div class="flex gap-2 mb-8" id="letterRow"></div>
+    <p id="wordHint" class="font-display text-lg text-center">Tippe die Buchstaben der Reihe nach an</p>
+  `;
+  wrap.appendChild(body);
+  app.appendChild(wrap);
+
+  const row = document.getElementById('letterRow');
+  const hint = document.getElementById('wordHint');
+  const chars = [...word.text];
+  let expected = 0;
+
+  chars.forEach((ch, i) => {
+    const b = document.createElement('button');
+    b.className = 'tile letterform text-3xl w-14 h-16 flex items-center justify-center';
+    b.style.color = 'var(--moss-dark)';
+    b.textContent = ch;
+    b.onclick = () => {
+      const def = letterById(ch.toLowerCase());
+      if (i === expected){
+        speak(def ? def.sound : ch);
+        b.style.background = '#E9F2E6';
+        expected++;
+        if (expected === chars.length){
+          hint.textContent = 'Ganzes Wort:';
+          setTimeout(() => speak(word.text), 500);
+          celebrate();
+        }
+      } else {
+        b.classList.add('shake');
+        setTimeout(()=>b.classList.remove('shake'), 500);
+      }
+    };
+    row.appendChild(b);
+  });
+}
+
+/* ---------- Geschichten ---------- */
+function renderStories(){
+  const wrap = document.createElement('div');
+  wrap.className = 'flex-1 flex flex-col relative z-10';
+  wrap.appendChild(header('Geschichten', () => go('map')));
+
+  const list = document.createElement('div');
+  list.className = 'flex-1 flex flex-col gap-4 px-5 py-4 max-w-md mx-auto w-full';
+  STORIES.forEach(s => {
+    const card = document.createElement('button');
+    card.className = 'tile flex items-center gap-4 p-5 text-left';
+    card.innerHTML = `
+      <div class="text-5xl">${s.emoji}</div>
+      <div>
+        <div class="font-display text-xl" style="color:var(--moss-dark)">${s.title}</div>
+        <div class="text-sm" style="color:var(--bark)">${s.pages.length} Seiten &middot; langsam vorgelesen</div>
+      </div>
+    `;
+    card.onclick = () => go('storyread', { id: s.id });
+    list.appendChild(card);
+  });
+  wrap.appendChild(list);
+  app.appendChild(wrap);
+}
+
+function renderStoryRead(storyId){
+  const story = STORIES.find(s => s.id === storyId);
+  const wrap = document.createElement('div');
+  wrap.className = 'flex-1 flex flex-col relative z-10';
+  wrap.appendChild(header(story.title, () => { speechSynthesis.cancel(); go('stories'); }));
+
+  const body = document.createElement('div');
+  body.className = 'flex-1 flex flex-col px-6 max-w-md mx-auto w-full';
+  wrap.appendChild(body);
+  app.appendChild(wrap);
+
+  let page = 0;
+
+  function splitSentences(text){
+    return text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  }
+  function wordsHtml(sentence){
+    return sentence.split(/(\s+)/).map(tok => {
+      if (!tok || /^\s+$/.test(tok)) return tok;
+      return `<span class="story-word">${tok}</span>`;
+    }).join('');
+  }
+
+  function renderPage(){
+    speechSynthesis.cancel();
+    const sentences = splitSentences(story.pages[page]);
+    body.innerHTML = `
+      <div class="text-center font-display text-sm mb-2" style="color:var(--bark)">Seite ${page+1} von ${story.pages.length}</div>
+      <div class="tile p-5 mb-4 text-xl leading-relaxed font-display" id="pageText" style="min-height:200px"></div>
+      <div class="flex items-center justify-center gap-3 mb-3">
+        <button id="prevBtn" class="btn w-12 h-12 text-white text-xl" style="background:var(--bark)">←</button>
+        <button id="playBtn" class="btn px-5 py-3 text-white text-base flex-1" style="background:var(--lavender)">🔊 Langsam vorlesen</button>
+        <button id="nextBtn" class="btn w-12 h-12 text-white text-xl" style="background:var(--bark)">${page === story.pages.length-1 ? '🏁' : '→'}</button>
+      </div>
+      <p class="text-center text-sm mb-3" style="color:var(--bark)">Tipp: Tippe ein Wort im Text an</p>
+      <div id="wordPanel" class="tile p-4 mb-4 hidden"></div>
+    `;
+    const textEl = document.getElementById('pageText');
+    textEl.innerHTML = sentences.map((s,i) => `<span data-i="${i}" class="story-sentence">${wordsHtml(s)}</span>`).join(' ');
+    textEl.querySelectorAll('.story-word').forEach(wEl => {
+      wEl.onclick = (e) => {
+        e.stopPropagation();
+        const clean = wEl.textContent.replace(/[„"“”‚'’.,!?;:()–—]/g,'').trim();
+        if (clean) onWordTap(clean, textEl);
+      };
+    });
+
+    const prevBtn = document.getElementById('prevBtn');
+    prevBtn.disabled = page === 0;
+    prevBtn.style.opacity = page === 0 ? '.4' : '1';
+    prevBtn.onclick = () => { if (page > 0){ page--; renderPage(); } };
+
+    document.getElementById('nextBtn').onclick = () => {
+      if (page < story.pages.length - 1){ page++; renderPage(); }
+      else { speechSynthesis.cancel(); go('stories'); }
+    };
+
+    function playPage(){
+      const spans = textEl.querySelectorAll('.story-sentence');
+      speakChain(sentences, {
+        rate: 0.65,
+        onIndex: (i) => {
+          spans.forEach(s => s.classList.remove('story-highlight'));
+          if (spans[i]) spans[i].classList.add('story-highlight');
+        },
+        onDone: () => spans.forEach(s => s.classList.remove('story-highlight')),
+      });
+    }
+    document.getElementById('playBtn').onclick = playPage;
+    playPage();
+  }
+
+  function onWordTap(word, textEl){
+    textEl.querySelectorAll('.story-sentence').forEach(s => s.classList.remove('story-highlight'));
+    const panel = document.getElementById('wordPanel');
+    panel.classList.remove('hidden');
+    panel.innerHTML = `
+      <div class="font-display text-sm mb-3 text-center" style="color:var(--bark)">Wort-Werkstatt</div>
+      <div class="flex justify-center gap-2 flex-wrap" id="wpLetters"></div>
+    `;
+    const lettersWrap = document.getElementById('wpLetters');
+    const chars = [...word];
+    chars.forEach(ch => {
+      const t = document.createElement('div');
+      t.className = 'letterform text-2xl w-11 h-12 flex items-center justify-center rounded-xl pop';
+      t.style.background = '#F3EEDD';
+      t.style.color = 'var(--moss-dark)';
+      t.style.border = '2px solid #E4DCC8';
+      t.textContent = ch;
+      lettersWrap.appendChild(t);
+    });
+    panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    const tiles = [...lettersWrap.children];
+    speakChain(chars.map(letterSound), {
+      rate: 0.75,
+      onIndex: (i) => {
+        tiles.forEach(t => t.style.boxShadow = 'none');
+        if (tiles[i]) tiles[i].style.boxShadow = '0 0 0 3px var(--honey)';
+      },
+      onDone: () => {
+        tiles.forEach(t => t.style.boxShadow = 'none');
+        setTimeout(() => speak(word, 0.8), 200);
+      },
+    });
+  }
+
+  renderPage();
+}
+
+/* ---------- Start ---------- */
+render();
+</script>
+</body>
+</html>
