@@ -3,11 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-<title>Buchstabenwiese</title>
+<title>Lernwiese</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lernwiese">
+<meta name="theme-color" content="#4A7856">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
+<!-- version pinned: sw.js precaches this exact URL -->
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
 <style>
   :root{
     --moss:#4A7856;
@@ -234,6 +240,7 @@ function go(newView, newCtx){
 function render(){
   app.innerHTML = '';
   if (view === 'welcome') renderWelcome();
+  else if (view === 'grade') renderGrade(ctx.subject);
   else if (view === 'map') renderMap();
   else if (view === 'detail') renderDetail(ctx.id);
   else if (view === 'trace') renderTrace(ctx.id, ctx.case);
@@ -257,28 +264,66 @@ function header(title, onBack){
   return bar;
 }
 
-/* ---------- Willkommen ---------- */
+/* ---------- Willkommen (Fach wählen) ---------- */
+const SUBJECTS = {
+  deutsch: { title:'Buchstabenwiese', emoji:'🔤', color:'var(--moss)',
+    grades:{ 1: () => go('map'), 2: null } },
+  mathe: { title:'Zahlenwiese', emoji:'🔢', color:'var(--honey)',
+    grades:{ 1: null, 2: null } },
+};
+
 function renderWelcome(){
   const wrap = document.createElement('div');
   wrap.className = 'hills flex-1 flex flex-col items-center justify-center relative z-10 px-6 text-center';
   wrap.innerHTML = `
     <div class="text-7xl mb-4 pop">🌼</div>
-    <h1 class="font-display text-4xl font-800 mb-2" style="color:var(--moss-dark)">Buchstabenwiese</h1>
-    <p class="font-display text-lg mb-8" style="color:var(--bark)">Buchstaben hören, erkennen und schreiben</p>
-    <button id="startBtn" class="btn text-white text-2xl px-10 py-4" style="background:var(--moss)">Los geht's! ▶</button>
+    <h1 class="font-display text-4xl font-800 mb-8" style="color:var(--moss-dark)">Lernwiese</h1>
+    <div class="flex flex-col gap-4 w-full max-w-xs" id="subjects"></div>
   `;
   app.appendChild(wrap);
-  document.getElementById('startBtn').onclick = () => {
-    speak('Willkommen auf der Buchstabenwiese!');
-    go('map');
-  };
+  const list = document.getElementById('subjects');
+  Object.entries(SUBJECTS).forEach(([key, s]) => {
+    const b = document.createElement('button');
+    b.className = 'btn text-white text-2xl py-5';
+    b.style.background = s.color;
+    b.textContent = `${s.emoji} ${s.title}`;
+    b.onclick = () => { speak(s.title); go('grade', { subject:key }); };
+    list.appendChild(b);
+  });
+}
+
+/* ---------- Klasse wählen ---------- */
+function renderGrade(subject){
+  const s = SUBJECTS[subject];
+  const wrap = document.createElement('div');
+  wrap.className = 'hills flex-1 flex flex-col relative z-10';
+  wrap.appendChild(header(s.title, () => go('welcome')));
+
+  const grid = document.createElement('div');
+  grid.className = 'grid grid-cols-2 gap-4 px-5 py-8 max-w-md mx-auto w-full';
+  [1, 2].forEach(g => {
+    const open = s.grades[g];
+    const tile = document.createElement('button');
+    tile.className = 'tile aspect-square flex flex-col items-center justify-center gap-2';
+    tile.disabled = !open;
+    if (!open) tile.style.opacity = '.5';
+    tile.innerHTML = `
+      <div class="font-display text-5xl font-800" style="color:var(--moss-dark)">${g}</div>
+      <div class="font-display text-xl">Klasse ${g}</div>
+      ${open ? '' : '<div class="text-sm">🚧 kommt bald</div>'}
+    `;
+    if (open) tile.onclick = open;
+    grid.appendChild(tile);
+  });
+  wrap.appendChild(grid);
+  app.appendChild(wrap);
 }
 
 /* ---------- Karte (Wiese mit allen Buchstaben, frei wählbar) ---------- */
 function renderMap(){
   const wrap = document.createElement('div');
   wrap.className = 'hills flex-1 flex flex-col relative z-10';
-  wrap.appendChild(header('Buchstabenwiese', () => go('welcome')));
+  wrap.appendChild(header('Buchstabenwiese', () => go('grade', { subject:'deutsch' })));
 
   const grid = document.createElement('div');
   grid.className = 'flex-1 grid grid-cols-3 gap-4 px-5 py-4 content-start max-w-md mx-auto w-full';
@@ -834,6 +879,7 @@ function renderStoryRead(storyId){
 
 /* ---------- Start ---------- */
 render();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
 </html>

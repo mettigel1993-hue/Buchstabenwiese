@@ -1,0 +1,10 @@
+{
+  "name": "Lernwiese",
+  "short_name": "Lernwiese",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EFF6ED",
+  "theme_color": "#4A7856",
+  "icons": [{ "src": "icon.png", "sizes": "512x512", "type": "image/png" }]
+}
